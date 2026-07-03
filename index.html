@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GR vs Target 2026 — Growth & SMB</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+  header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    color: white; padding: 28px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+  header p { font-size: 0.85rem; opacity: 0.65; margin-top: 4px; }
+  .badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; }
+
+  .segment-nav {
+    background: white; border-bottom: 1px solid #e5e7eb;
+    display: flex; padding: 0 40px;
+  }
+  .segment-nav button {
+    padding: 16px 28px; border: none; background: none; cursor: pointer;
+    font-size: 0.95rem; font-weight: 600; color: #6b7280; border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .segment-nav button.active { color: #0f3460; border-bottom-color: #0f3460; }
+  .segment-nav button:hover:not(.active) { color: #374151; }
+
+  .section { display: none; padding: 32px 40px; }
+  .section.active { display: block; }
+
+  /* KPI cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi-card {
+    background: white; border-radius: 12px; padding: 20px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    border-left: 4px solid #e5e7eb;
+  }
+  .kpi-card.green { border-left-color: #10b981; }
+  .kpi-card.yellow { border-left-color: #f59e0b; }
+  .kpi-card.blue  { border-left-color: #3b82f6; }
+  .kpi-card.gray  { border-left-color: #9ca3af; }
+  .kpi-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #6b7280; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.6rem; font-weight: 700; color: #111827; }
+  .kpi-sub { font-size: 0.78rem; color: #6b7280; margin-top: 4px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 700; margin-left: 6px; }
+  .pill.green { background: #d1fae5; color: #065f46; }
+  .pill.yellow { background: #fef3c7; color: #92400e; }
+  .pill.gray { background: #f3f4f6; color: #374151; }
+
+  /* Charts grid */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .chart-card {
+    background: white; border-radius: 12px; padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+  .chart-card.wide { grid-column: span 2; }
+  .chart-title { font-size: 0.9rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
+  .chart-sub { font-size: 0.75rem; color: #9ca3af; margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 260px; width: 100%; }
+
+  /* Table */
+  .table-card { background: white; border-radius: 12px; padding: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  th { text-align: left; padding: 8px 12px; font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px; color: #6b7280;
+    border-bottom: 2px solid #f3f4f6; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f9fafb; color: #374151; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f9fafb; }
+  .progress-bar-wrap { background: #f3f4f6; border-radius: 999px; height: 6px; width: 100px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+  .progress-bar { height: 6px; border-radius: 999px; }
+  .pg-green { background: #10b981; }
+  .pg-yellow { background: #f59e0b; }
+  .pg-blue { background: #3b82f6; }
+  .pg-gray { background: #d1d5db; }
+
+  .note { font-size: 0.73rem; color: #9ca3af; margin-top: 8px; }
+  .partial-badge { background: #fef9c3; color: #92400e; font-size: 0.7rem; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Gross Revenue vs. Target 2026</h1>
+    <p>Colombia LATAM · Proyección Growth & SMB</p>
+  </div>
+  <div class="badge">Actualizado: Jun 2026 · Datos Ene–Jun 2026 (Jun parcial)</div>
+</header>
+
+<nav class="segment-nav">
+  <button class="active" onclick="showSection('growth', this)">📈 Growth</button>
+  <button onclick="showSection('smb', this)">🏪 SMB</button>
+  <button onclick="showSection('total', this)">🌐 Total</button>
+</nav>
+
+<!-- ═══════════════════ GROWTH ═══════════════════ -->
+<section id="growth" class="section active">
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">Q1 Actual GR</div>
+      <div class="kpi-value">$1.93M</div>
+      <div class="kpi-sub">Target: $1.74M <span class="pill green">110.2%</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Q2 Actual GR <span class="partial-badge">Abr–Jun</span></div>
+      <div class="kpi-value">$1.92M</div>
+      <div class="kpi-sub">Target Q2: $2.04M · Jun parcial <span class="pill yellow">94.3%</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Target Full Year</div>
+      <div class="kpi-value">$8.04M</div>
+      <div class="kpi-sub">Q3: $2.12M · Q4: $2.15M</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">YTD GR (Ene–Jun)</div>
+      <div class="kpi-value">$3.85M</div>
+      <div class="kpi-sub">vs YTD Target $3.78M <span class="pill green">101.8%</span></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">GR vs Target por Trimestre</div>
+      <div class="chart-sub">USD · Q3 y Q4 sin datos reales aún</div>
+      <div class="chart-wrap"><canvas id="growthQuarterly"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Tendencia Mensual GR</div>
+      <div class="chart-sub">Enero – Junio 2026</div>
+      <div class="chart-wrap"><canvas id="growthMonthly"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="chart-title">Desempeño por KAM (Farmer Actual)</div>
+    <div class="chart-sub" style="margin-bottom:14px">GR cruzado por merchant → Nuevo KAM · Q2 = Abr+May+Jun (Jun parcial)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>KAM</th>
+          <th>Q1 Target</th>
+          <th>Q1 Actual</th>
+          <th>Q1 %</th>
+          <th>Q2 Target</th>
+          <th>Q2 Actual (parcial)</th>
+          <th>Q2 %</th>
+        </tr>
+      </thead>
+      <tbody id="growthKamTable"></tbody>
+    </table>
+    <p class="note">* Q2 target completo vs actuals Abr–Jun (Jun parcial, TRM 3860).</p>
+  </div>
+
+  <div class="chart-card wide">
+    <div class="chart-title">GR por KAM — Q1 vs Q2 Parcial</div>
+    <div class="chart-sub">USD · barras agrupadas</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="growthKamChart"></canvas></div>
+  </div>
+
+  <!-- Merchant table -->
+  <div class="table-card" style="margin-top:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div>
+          <div class="chart-title">Detalle por Comercio — Mes a Mes</div>
+          <div id="merchantCount" class="chart-sub">157 comercios</div>
+        </div>
+        <div id="merchantSummary" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="kamFilter" onchange="filterMerchants()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
+          <option value="">Todos los KAM</option>
+          <option>CRISTINA SAENZ</option>
+          <option>EDER LEONARDO CANTOR</option>
+          <option>EDUAR MALAGON</option>
+          <option>Not Assigned</option>
+          <option>PAULA RODRIGUEZ</option>
+        </select>
+        <select id="sortFilter" onchange="filterMerchants()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
+          <option value="q1a">Ordenar por Q1</option>
+          <option value="q2a">Ordenar por Q2</option>
+          <option value="jan_a">Ordenar por Ene</option>
+          <option value="apr_a">Ordenar por Abr</option>
+          <option value="may_a">Ordenar por May</option>
+        <option value="jun_a">Ordenar por Jun</option>
+        </select>
+        <select id="perfFilter" onchange="filterMerchants()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="under80">⚠️ Q2 &lt; 80%</option>
+          <option value="under70">🔴 Q2 &lt; 70%</option>
+          <option value="over100">✅ Q2 ≥ 100%</option>
+        </select>
+        <input id="merchantSearch" oninput="filterMerchants()" placeholder="Buscar comercio…" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;width:170px">
+        <button onclick="downloadCSV()" style="padding:7px 14px;background:#0f3460;color:white;border:none;border-radius:8px;font-size:0.83rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
+          ⬇ Descargar CSV
+        </button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:520px;overflow-y:auto">
+    <table id="merchantTable" style="font-size:0.78rem;min-width:900px">
+      <thead style="position:sticky;top:0;background:white;z-index:2">
+        <tr>
+          <th rowspan="2" style="min-width:180px;vertical-align:bottom">Comercio</th>
+          <th rowspan="2" style="min-width:120px;vertical-align:bottom">KAM</th>
+          <th colspan="4" style="text-align:center;background:#f0f9ff;border-bottom:1px solid #bae6fd;color:#0369a1">── Q1 ──</th>
+          <th colspan="4" style="text-align:center;background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e">── Q2 Parcial ──</th>
+        </tr>
+        <tr>
+          <th style="background:#f0f9ff;text-align:right">Ene</th>
+          <th style="background:#f0f9ff;text-align:right">Feb</th>
+          <th style="background:#f0f9ff;text-align:right">Mar</th>
+          <th style="background:#f0f9ff;text-align:right;border-right:2px solid #bae6fd">Q1 Total</th>
+          <th style="background:#fffbeb;text-align:right">Abr</th>
+          <th style="background:#fffbeb;text-align:right">May</th>
+          <th style="background:#fffbeb;text-align:right">Jun</th>
+          <th style="background:#fef3c7;text-align:right;border-left:2px solid #fde68a">Q2 Total</th>
+        </tr>
+        <tr id="targetRow" style="background:#f9fafb">
+          <td colspan="2" style="font-size:0.7rem;font-weight:700;color:#6b7280;padding:4px 12px">TARGET</td>
+          <td id="tot_jan_t" style="text-align:right;background:#f0f9ff;font-weight:700;color:#0369a1;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_feb_t" style="text-align:right;background:#f0f9ff;font-weight:700;color:#0369a1;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_mar_t" style="text-align:right;background:#f0f9ff;font-weight:700;color:#0369a1;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_q1t"   style="text-align:right;background:#f0f9ff;font-weight:700;color:#0369a1;padding:4px 8px;font-size:0.7rem;border-right:2px solid #bae6fd"></td>
+          <td id="tot_apr_t" style="text-align:right;background:#fffbeb;font-weight:700;color:#92400e;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_may_t" style="text-align:right;background:#fffbeb;font-weight:700;color:#92400e;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_jun_t" style="text-align:right;background:#fffbeb;font-weight:700;color:#92400e;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_q2t"   style="text-align:right;background:#fef3c7;font-weight:700;color:#92400e;padding:4px 8px;font-size:0.7rem;border-left:2px solid #fde68a"></td>
+        </tr>
+        <tr id="totalRow" style="background:#f9fafb">
+          <td colspan="2" style="font-size:0.7rem;font-weight:700;color:#6b7280;padding:4px 12px">TOTAL FILTRADO</td>
+          <td id="tot_jan_a" style="text-align:right;background:#f0f9ff;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_feb_a" style="text-align:right;background:#f0f9ff;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_mar_a" style="text-align:right;background:#f0f9ff;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_q1a"   style="text-align:right;background:#f0f9ff;font-weight:700;padding:4px 8px;font-size:0.7rem;border-right:2px solid #bae6fd"></td>
+          <td id="tot_apr_a" style="text-align:right;background:#fffbeb;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_may_a" style="text-align:right;background:#fffbeb;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_jun_a" style="text-align:right;background:#fffbeb;font-weight:700;padding:4px 8px;font-size:0.7rem"></td>
+          <td id="tot_q2a"   style="text-align:right;background:#fef3c7;font-weight:700;padding:4px 8px;font-size:0.7rem;border-left:2px solid #fde68a"></td>
+        </tr>
+      </thead>
+      <tbody id="merchantTableBody"></tbody>
+    </table>
+    </div>
+    <p class="note" style="margin-top:8px">* Targets mensuales = target Q ÷ 3. Q2 = Abr+May+Jun (Jun parcial).</p>
+  </div>
+
+  <div class="table-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="chart-title">📊 Crecimiento vs 2025 — Growth</div>
+        <div class="chart-sub">GR real mensual · comparativo 2025 vs 2026 · USD</div>
+      </div>
+      <select id="yoyKamFilter" onchange="renderYoYTable()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
+        <option value="ALL">Todos los KAM</option>
+        <option value="CRISTINA SAENZ">CRISTINA SAENZ</option>
+        <option value="EDER LEONARDO CANTOR">EDER LEONARDO CANTOR</option>
+        <option value="EDUAR MALAGON">EDUAR MALAGON</option>
+        <option value="Not Assigned">Not Assigned</option>
+        <option value="PAULA RODRIGUEZ">PAULA RODRIGUEZ</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th style="text-align:right">GR 2025</th>
+          <th style="text-align:right">GR 2026</th>
+          <th style="text-align:right">Variación $</th>
+          <th style="text-align:right">YoY %</th>
+        </tr>
+      </thead>
+      <tbody id="yoyTableBody"></tbody>
+    </table>
+    <p class="note">* 2025: Sheet 1 del archivo · 2026: actuals dashboard · Jun 2026 parcial</p>
+  </div>
+
+</section>
+
+<!-- ═══════════════════ SMB ═══════════════════ -->
+<section id="smb" class="section">
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">Q1 Actual GR</div>
+      <div class="kpi-value">$1.64M</div>
+      <div class="kpi-sub">Target: $1.53M <span class="pill green">107.0%</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Q2 Actual GR <span class="partial-badge">Abr–Jun</span></div>
+      <div class="kpi-value">$1.36M</div>
+      <div class="kpi-sub">Target Q2: $1.54M · Jun parcial <span class="pill yellow">88.4%</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Target Full Year</div>
+      <div class="kpi-value">$6.65M</div>
+      <div class="kpi-sub">Q3: $1.73M · Q4: $1.84M</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">YTD GR (Ene–Jun)</div>
+      <div class="kpi-value">$3.00M</div>
+      <div class="kpi-sub">vs YTD Target $3.07M <span class="pill yellow">97.7%</span></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">GR vs Target por Trimestre</div>
+      <div class="chart-sub">USD · Q3 y Q4 sin datos reales aún</div>
+      <div class="chart-wrap"><canvas id="smbQuarterly"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Tendencia Mensual GR</div>
+      <div class="chart-sub">Enero – Junio 2026</div>
+      <div class="chart-wrap"><canvas id="smbMonthly"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="chart-title">Resumen Trimestral SMB</div>
+    <div class="chart-sub" style="margin-bottom:14px">Cumplimiento trimestral 2026</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Trimestre</th>
+          <th>Target</th>
+          <th>Actual GR</th>
+          <th>Diferencia</th>
+          <th>Cumplimiento</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Q1 2026</strong></td>
+          <td>$1,529,412</td>
+          <td>$1,636,269</td>
+          <td style="font-weight:700;color:#10b981">+$106,857</td>
+          <td>
+            107.0%
+            <span class="progress-bar-wrap"><span class="progress-bar pg-green" style="width:100%"></span></span>
+          </td>
+          <td><span class="pill green">✓ Superado</span></td>
+        </tr>
+        <tr>
+          <td><strong>Q2 2026</strong> <span class="partial-badge">Parcial</span></td>
+          <td>$1,542,489</td>
+          <td>$1,364,182</td>
+          <td style="font-weight:700;color:#f59e0b">-$178,307</td>
+          <td>
+            88.4%
+            <span class="progress-bar-wrap"><span class="progress-bar pg-yellow" style="width:88%"></span></span>
+          </td>
+          <td><span class="pill yellow">En curso</span></td>
+        </tr>
+        <tr style="background:#f0fdf4;font-size:0.88em;color:#6b7280">
+          <td style="padding-left:24px">↳ Comercios Migrados</td>
+          <td>—</td>
+          <td>$59,967</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="pill green">Incluido Q2</span></td>
+        </tr>
+        <tr>
+          <td><strong>Q3 2026</strong></td>
+          <td>$1,731,974</td>
+          <td>—</td>
+          <td style="color:#9ca3af">—</td>
+          <td><span class="pill gray">Pendiente</span></td>
+          <td><span class="pill gray">Sin datos</span></td>
+        </tr>
+        <tr>
+          <td><strong>Q4 2026</strong></td>
+          <td>$1,844,874</td>
+          <td>—</td>
+          <td style="color:#9ca3af">—</td>
+          <td><span class="pill gray">Pendiente</span></td>
+          <td><span class="pill gray">Sin datos</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="chart-title">📊 Crecimiento vs 2025 — SMB</div>
+    <div class="chart-sub" style="margin-bottom:14px">GR real mensual · comparativo 2025 vs 2026 · USD</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th style="text-align:right">GR 2025</th>
+          <th style="text-align:right">GR 2026</th>
+          <th style="text-align:right">Variación $</th>
+          <th style="text-align:right">YoY %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Enero</td>
+          <td style="text-align:right">$691,959</td>
+          <td style="text-align:right">$559,022</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$132,937</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-19.2%</span></td>
+        </tr>
+        <tr>
+          <td>Febrero</td>
+          <td style="text-align:right">$652,512</td>
+          <td style="text-align:right">$523,744</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$128,768</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-19.7%</span></td>
+        </tr>
+        <tr>
+          <td>Marzo</td>
+          <td style="text-align:right">$699,868</td>
+          <td style="text-align:right">$553,503</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$146,365</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-20.9%</span></td>
+        </tr>
+        <tr style="background:#f0f9ff;font-weight:700;border-top:1px solid #bae6fd;border-bottom:1px solid #bae6fd">
+          <td><strong>Q1 Total</strong></td>
+          <td style="text-align:right">$2,044,339</td>
+          <td style="text-align:right">$1,636,269</td>
+          <td style="text-align:right;color:#ef4444">-$408,070</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-20.0%</span></td>
+        </tr>
+        <tr>
+          <td>Abril</td>
+          <td style="text-align:right">$640,870</td>
+          <td style="text-align:right">$491,185</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$149,685</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-23.4%</span></td>
+        </tr>
+        <tr>
+          <td>Mayo</td>
+          <td style="text-align:right">$723,346</td>
+          <td style="text-align:right">$461,405</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$261,941</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-36.2%</span></td>
+        </tr>
+        <tr>
+          <td>Junio <span class="partial-badge">Parcial</span></td>
+          <td style="text-align:right">$633,269</td>
+          <td style="text-align:right">$351,625</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$281,644</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-44.5%</span></td>
+        </tr>
+        <tr style="background:#fffbeb;font-weight:700;border-top:1px solid #fde68a;border-bottom:1px solid #fde68a">
+          <td><strong>Q2 Total</strong> <span class="partial-badge">Parcial</span></td>
+          <td style="text-align:right">$1,997,486</td>
+          <td style="text-align:right">$1,364,182</td>
+          <td style="text-align:right;color:#ef4444">-$633,304</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-31.7%</span></td>
+        </tr>
+        <tr style="background:#f0fdf4;font-weight:700;border-top:2px solid #86efac">
+          <td><strong>H1 Total</strong></td>
+          <td style="text-align:right">$4,041,825</td>
+          <td style="text-align:right">$3,000,451</td>
+          <td style="text-align:right;color:#ef4444">-$1,041,374</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-25.8%</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">* 2025: Sheet 1 del archivo · 2026: actuals dashboard · Q2 incluye Comercios Migrados · Jun 2026 parcial</p>
+  </div>
+
+</section>
+
+<script>
+const fmt = (n) => '$' + (n >= 1e6 ? (n/1e6).toFixed(2)+'M' : (n/1e3).toFixed(0)+'K');
+
+// ── COLORS ──
+const TARGET_COLOR = 'rgba(99,102,241,0.85)';
+const ACTUAL_COLOR = 'rgba(16,185,129,0.85)';
+const PARTIAL_COLOR = 'rgba(245,158,11,0.85)';
+const MONTH_COLOR = 'rgba(59,130,246,0.85)';
+
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+
+// ════════════════ GROWTH ════════════════
+
+// Quarterly
+new Chart(document.getElementById('growthQuarterly'), {
+  type: 'bar',
+  data: {
+    labels: ['Q1', 'Q2 (Abr–Jun)', 'Q3', 'Q4'],
+    datasets: [
+      { label: 'Target', data: [1741888, 2042034, 2121787, 2152535], backgroundColor: TARGET_COLOR, borderRadius: 5 },
+      { label: 'Actual GR', data: [1927476, 1924784, 0, 0], backgroundColor: [ACTUAL_COLOR, ACTUAL_COLOR, PARTIAL_COLOR, PARTIAL_COLOR], borderRadius: 5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' },
+      tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw || 0) } } },
+    scales: {
+      y: { ticks: { callback: v => fmt(v) }, grid: { color: '#f3f4f6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Monthly trend
+new Chart(document.getElementById('growthMonthly'), {
+  type: 'line',
+  data: {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [{
+      label: 'Actual GR',
+      data: [674265, 620663, 632547, 656255, 654433, 625211],
+      borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+      fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#3b82f6'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' GR: ' + fmt(ctx.raw) } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: '#f3f4f6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Targets = Nuevo KAM. Q1+Q2 Actuals = Data.xlsx TRM 3860. Q2 incluye Jun parcial.
+const kamData = [
+  { name: 'EDUAR MALAGON',        q1t: 571003, q1a: 669465, q2t: 725368, q2a: 735433 },
+  { name: 'EDER L. CANTOR',       q1t: 463509, q1a: 539317, q2t: 575896, q2a: 562986 },
+  { name: 'PAULA RODRIGUEZ',      q1t: 560952, q1a: 592086, q2t: 560902, q2a: 513757 },
+  { name: 'CRISTINA SAENZ',       q1t: 15159,  q1a: 12670,  q2t: 178055, q2a: 22760  },
+  { name: 'NOT ASSIGNED',         q1t: 131265, q1a: 102307, q2t: 1813,   q2a: 84961  },
+];
+
+// Table
+const tbody = document.getElementById('growthKamTable');
+kamData.forEach(k => {
+  const q1pct = k.q1t ? ((k.q1a / k.q1t)*100).toFixed(0)+'%' : '—';
+  const q2pct = k.q2t ? ((k.q2a / k.q2t)*100).toFixed(0)+'%' : '—';
+  const q1color = k.q1t ? (k.q1a >= k.q1t ? 'pg-green' : 'pg-yellow') : 'pg-blue';
+  const q2color = 'pg-yellow';
+  const q1w = k.q1t ? Math.min(100, (k.q1a/k.q1t)*100) : 0;
+  const q2w = k.q2t ? Math.min(100, (k.q2a/k.q2t)*100) : 0;
+  tbody.innerHTML += `
+    <tr>
+      <td><strong>${k.name}</strong></td>
+      <td>${k.q1t ? '$'+(k.q1t/1000).toFixed(0)+'K' : '—'}</td>
+      <td>$${(k.q1a/1000).toFixed(0)}K</td>
+      <td>${q1pct} <span class="progress-bar-wrap"><span class="progress-bar ${q1color}" style="width:${q1w}%"></span></span></td>
+      <td>${k.q2t ? '$'+(k.q2t/1000).toFixed(0)+'K' : '—'}</td>
+      <td>$${(k.q2a/1000).toFixed(0)}K</td>
+      <td>${q2pct} <span class="progress-bar-wrap"><span class="progress-bar ${q2color}" style="width:${q2w}%"></span></span></td>
+    </tr>`;
+});
+
+// KAM bar chart
+new Chart(document.getElementById('growthKamChart'), {
+  type: 'bar',
+  data: {
+    labels: kamData.map(k => k.name),
+    datasets: [
+      { label: 'Q1 Actual', data: kamData.map(k => k.q1a), backgroundColor: ACTUAL_COLOR, borderRadius: 4 },
+      { label: 'Q2 Actual (parcial)', data: kamData.map(k => k.q2a), backgroundColor: PARTIAL_COLOR, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' },
+      tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw) } } },
+    scales: {
+      y: { ticks: { callback: v => fmt(v) }, grid: { color: '#f3f4f6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ════════════════ SMB ════════════════
+
+new Chart(document.getElementById('smbQuarterly'), {
+  type: 'bar',
+  data: {
+    labels: ['Q1', 'Q2 (Abr–Jun)', 'Q3', 'Q4'],
+    datasets: [
+      { label: 'Target', data: [1529412, 1542489, 1731974, 1844874], backgroundColor: TARGET_COLOR, borderRadius: 5 },
+      { label: 'Actual GR', data: [1636269, 1364182, 0, 0], backgroundColor: [ACTUAL_COLOR, ACTUAL_COLOR, PARTIAL_COLOR, PARTIAL_COLOR], borderRadius: 5 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top' },
+      tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw || 0) } } },
+    scales: {
+      y: { ticks: { callback: v => fmt(v) }, grid: { color: '#f3f4f6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+new Chart(document.getElementById('smbMonthly'), {
+  type: 'line',
+  data: {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+    datasets: [{
+      label: 'Actual GR',
+      data: [559022, 523744, 553503, 491185, 461405, 351625],
+      borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)',
+      fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#10b981'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' GR: ' + fmt(ctx.raw) } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => fmt(v) }, grid: { color: '#f3f4f6' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ════════════════ MERCHANT TABLE ════════════════
+const merchantData = [{"name":"SELF TARGET","kam":"CRISTINA SAENZ","q1t":15159.0,"q2t":19358.0,"q3t":22541.0,"q4t":25096.0,"jan_t":5053.0,"feb_t":5053.0,"mar_t":5053.0,"apr_t":6452.7,"may_t":6452.7,"jan_a":4751,"feb_a":4428,"mar_a":4737,"apr_a":3791,"may_a":4315,"q1a":13916,"q2a":11115,"jun_a":3009,"jun_t":6452.7},{"name":"CINEMARK COLOMBIA S.A","kam":"EDUAR MALAGON","q1t":62751.0,"q2t":100000,"q3t":97155.0,"q4t":81511.0,"jan_t":20917.0,"feb_t":20917.0,"mar_t":20917.0,"apr_t":33333.3,"may_t":33333.3,"jan_a":37372,"feb_a":24360,"mar_a":27700,"apr_a":60973,"may_a":55544,"q1a":89432,"q2a":175578,"jun_a":59061,"jun_t":33333.3},{"name":"AGROCAMPO S.A.S","kam":"PAULA RODRIGUEZ","q1t":47557.0,"q2t":49756,"q3t":47218.0,"q4t":60608.0,"jan_t":15852.3,"feb_t":15852.3,"mar_t":15852.3,"apr_t":16585.3,"may_t":16585.3,"jan_a":16714,"feb_a":13923,"mar_a":14502,"apr_a":12225,"may_a":20603,"q1a":45139,"q2a":46657,"jun_a":13829,"jun_t":16585.3},{"name":"ALCANOS DE COLOMBIA S.A. ESP","kam":"EDER LEONARDO CANTOR","q1t":8831.0,"q2t":12699,"q3t":10067.0,"q4t":11205.0,"jan_t":2943.7,"feb_t":2943.7,"mar_t":2943.7,"apr_t":4233.0,"may_t":4233.0,"jan_a":3837,"feb_a":3726,"mar_a":3488,"apr_a":2574,"may_a":2792,"q1a":11051,"q2a":7970,"jun_a":2604,"jun_t":4233.0},{"name":"ALFABET SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"ALFAGRES SA","kam":"PAULA RODRIGUEZ","q1t":39943.0,"q2t":45580,"q3t":58707.0,"q4t":56100.0,"jan_t":13314.3,"feb_t":13314.3,"mar_t":13314.3,"apr_t":15193.3,"may_t":15193.3,"jan_a":12733,"feb_a":14606,"mar_a":16708,"apr_a":10787,"may_a":11433,"q1a":44047,"q2a":32649,"jun_a":10429,"jun_t":15193.3},{"name":"ALMACENES EXITO S.A.","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":374,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":124.7,"may_t":124.7,"jan_a":107,"feb_a":107,"mar_a":117,"apr_a":111,"may_a":109,"q1a":331,"q2a":334,"jun_a":114,"jun_t":124.7},{"name":"ARTURO CALLE","kam":"PAULA RODRIGUEZ","q1t":3642.0,"q2t":6869,"q3t":5863.0,"q4t":10225.0,"jan_t":1214.0,"feb_t":1214.0,"mar_t":1214.0,"apr_t":2289.7,"may_t":2289.7,"jan_a":1742,"feb_a":1474,"mar_a":1991,"apr_a":1471,"may_a":2170,"q1a":5207,"q2a":6587,"jun_a":2946,"jun_t":2289.7},{"name":"ASOCIACION COLOMBIANA DE ADMINISTRADORAS DE FONDOS","kam":"Not Assigned","q1t":0.0,"q2t":1813,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":604.3,"may_t":604.3,"jan_a":109,"feb_a":615,"mar_a":569,"apr_a":1458,"may_a":216,"q1a":1293,"q2a":1674,"jun_a":0,"jun_t":604.3},{"name":"AVENU LEARNING LLC","kam":"PAULA RODRIGUEZ","q1t":25096.0,"q2t":28127,"q3t":22846.0,"q4t":25168.0,"jan_t":8365.3,"feb_t":8365.3,"mar_t":8365.3,"apr_t":9375.7,"may_t":9375.7,"jan_a":7860,"feb_a":10199,"mar_a":10500,"apr_a":9210,"may_a":8428,"q1a":28559,"q2a":23025,"jun_a":5387,"jun_t":9375.7},{"name":"AYENDA SAS","kam":"EDER LEONARDO CANTOR","q1t":3287.0,"q2t":3042,"q3t":2900.0,"q4t":2868.0,"jan_t":1095.7,"feb_t":1095.7,"mar_t":1095.7,"apr_t":1014.0,"may_t":1014.0,"jan_a":1198,"feb_a":840,"mar_a":1004,"apr_a":665,"may_a":675,"q1a":3042,"q2a":1984,"jun_a":644,"jun_t":1014.0},{"name":"AZUL & BLANCO MILLONARIOS F.C S.A","kam":"EDER LEONARDO CANTOR","q1t":6254.0,"q2t":13105,"q3t":6764.0,"q4t":7961.0,"jan_t":2084.7,"feb_t":2084.7,"mar_t":2084.7,"apr_t":4368.3,"may_t":4368.3,"jan_a":6281,"feb_a":3369,"mar_a":3455,"apr_a":1473,"may_a":944,"q1a":13105,"q2a":5010,"jun_a":2593,"jun_t":4368.3},{"name":"PERSIANAS Y ENROLLABLES SAFRA S A S","kam":"EDUAR MALAGON","q1t":66189.0,"q2t":66462,"q3t":69790.0,"q4t":72402.0,"jan_t":22063.0,"feb_t":22063.0,"mar_t":22063.0,"apr_t":22154.0,"may_t":22154.0,"jan_a":5036,"feb_a":7752,"mar_a":6677,"apr_a":5990,"may_a":6164,"q1a":19465,"q2a":18227,"jun_a":6073,"jun_t":22154.0},{"name":"SONY","kam":"EDUAR MALAGON","q1t":26041.0,"q2t":26041,"q3t":37887.0,"q4t":87070.0,"jan_t":8680.3,"feb_t":8680.3,"mar_t":8680.3,"apr_t":8680.3,"may_t":8680.3,"jan_a":14127,"feb_a":15084,"mar_a":15480,"apr_a":16925,"may_a":10168,"q1a":44691,"q2a":41753,"jun_a":14660,"jun_t":8680.3},{"name":"DESPEGAR SA","kam":"EDUAR MALAGON","q1t":40418.0,"q2t":60418,"q3t":50650.0,"q4t":45818.0,"jan_t":13472.7,"feb_t":13472.7,"mar_t":13472.7,"apr_t":20139.3,"may_t":20139.3,"jan_a":22892,"feb_a":15699,"mar_a":19167,"apr_a":18841,"may_a":19351,"q1a":57758,"q2a":64769,"jun_a":26577,"jun_t":20139.3},{"name":"CAJA COLOMBIANA DE SUBSIDIO FAMILIAR COLSUBSIDIO","kam":"EDER LEONARDO CANTOR","q1t":4396.0,"q2t":5011,"q3t":4887.0,"q4t":4097.0,"jan_t":1465.3,"feb_t":1465.3,"mar_t":1465.3,"apr_t":1670.3,"may_t":1670.3,"jan_a":1707,"feb_a":1481,"mar_a":1823,"apr_a":1710,"may_a":1821,"q1a":5011,"q2a":5386,"jun_a":1855,"jun_t":1670.3},{"name":"CAJA DE COMPENSACION FAMILIAR CAFAM","kam":"EDER LEONARDO CANTOR","q1t":4518.0,"q2t":5647,"q3t":4796.0,"q4t":5207.0,"jan_t":1506.0,"feb_t":1506.0,"mar_t":1506.0,"apr_t":1882.3,"may_t":1882.3,"jan_a":1822,"feb_a":2010,"mar_a":1756,"apr_a":1456,"may_a":1304,"q1a":5588,"q2a":3248,"jun_a":488,"jun_t":1882.3},{"name":"CAJA DE COMPENSACION FAMILIAR COMPENSAR","kam":"EDER LEONARDO CANTOR","q1t":9076.0,"q2t":9076,"q3t":9931.0,"q4t":8534.0,"jan_t":3025.3,"feb_t":3025.3,"mar_t":3025.3,"apr_t":3025.3,"may_t":3025.3,"jan_a":2842,"feb_a":2825,"mar_a":3253,"apr_a":2910,"may_a":3397,"q1a":8920,"q2a":9568,"jun_a":3261,"jun_t":3025.3},{"name":"FONYOU COLOMBIA SAS","kam":"EDUAR MALAGON","q1t":33589.0,"q2t":37529,"q3t":42305.0,"q4t":44990.0,"jan_t":11196.3,"feb_t":11196.3,"mar_t":11196.3,"apr_t":12509.7,"may_t":12509.7,"jan_a":16441,"feb_a":14550,"mar_a":15422,"apr_a":15616,"may_a":16273,"q1a":46413,"q2a":32206,"jun_a":317,"jun_t":12509.7},{"name":"CARVAJAL EDUCACION S.A.S","kam":"PAULA RODRIGUEZ","q1t":10379.0,"q2t":5566,"q3t":1848.0,"q4t":2747.0,"jan_t":3459.7,"feb_t":3459.7,"mar_t":3459.7,"apr_t":1855.3,"may_t":1855.3,"jan_a":4368,"feb_a":2501,"mar_a":697,"apr_a":109,"may_a":42,"q1a":7566,"q2a":166,"jun_a":15,"jun_t":1855.3},{"name":"CARVAJAL INFORMACION","kam":"PAULA RODRIGUEZ","q1t":4760.0,"q2t":8400,"q3t":5326.0,"q4t":4272.0,"jan_t":1586.7,"feb_t":1586.7,"mar_t":1586.7,"apr_t":2800.0,"may_t":2800.0,"jan_a":2158,"feb_a":2187,"mar_a":2331,"apr_a":2152,"may_a":1994,"q1a":6676,"q2a":6167,"jun_a":2021,"jun_t":2800.0},{"name":"CASA EDITORIAL EL TIEMPO","kam":"PAULA RODRIGUEZ","q1t":5423.0,"q2t":6481,"q3t":5950.0,"q4t":6580.0,"jan_t":1807.7,"feb_t":1807.7,"mar_t":1807.7,"apr_t":2160.3,"may_t":2160.3,"jan_a":2017,"feb_a":1757,"mar_a":1997,"apr_a":8171,"may_a":1841,"q1a":5771,"q2a":11690,"jun_a":1678,"jun_t":2160.3},{"name":"CASALLAS SOLA S A S","kam":"PAULA RODRIGUEZ","q1t":913.0,"q2t":1074,"q3t":745.0,"q4t":914.0,"jan_t":304.3,"feb_t":304.3,"mar_t":304.3,"apr_t":358.0,"may_t":358.0,"jan_a":471,"feb_a":263,"mar_a":339,"apr_a":286,"may_a":338,"q1a":1073,"q2a":696,"jun_a":72,"jun_t":358.0},{"name":"CELLVOZ COLOMBIA SERVICIOS INTEGRALES SA ESP","kam":"EDER LEONARDO CANTOR","q1t":17159.0,"q2t":18751,"q3t":21674.0,"q4t":26213.0,"jan_t":5719.7,"feb_t":5719.7,"mar_t":5719.7,"apr_t":6250.3,"may_t":6250.3,"jan_a":6879,"feb_a":6794,"mar_a":7370,"apr_a":6599,"may_a":2530,"q1a":21043,"q2a":10995,"jun_a":1866,"jun_t":6250.3},{"name":"CENCOSUD COLOMBIA SA","kam":"PAULA RODRIGUEZ","q1t":966.0,"q2t":1711,"q3t":841.0,"q4t":892.0,"jan_t":322.0,"feb_t":322.0,"mar_t":322.0,"apr_t":570.3,"may_t":570.3,"jan_a":436,"feb_a":547,"mar_a":470,"apr_a":455,"may_a":507,"q1a":1453,"q2a":1418,"jun_a":456,"jun_t":570.3},{"name":"CENTRO MEDICO DEPORTIVO INCA SPORTS GYM 49 LTDA","kam":"PAULA RODRIGUEZ","q1t":18915.0,"q2t":18915,"q3t":15942.0,"q4t":17718.0,"jan_t":6305.0,"feb_t":6305.0,"mar_t":6305.0,"apr_t":6305.0,"may_t":6305.0,"jan_a":9383,"feb_a":5748,"mar_a":6271,"apr_a":6447,"may_a":6035,"q1a":21402,"q2a":17656,"jun_a":5174,"jun_t":6305.0},{"name":"CERAMICA ITALIA S.A","kam":"EDER LEONARDO CANTOR","q1t":7390.0,"q2t":8355,"q3t":7384.0,"q4t":11384.0,"jan_t":2463.3,"feb_t":2463.3,"mar_t":2463.3,"apr_t":2785.0,"may_t":2785.0,"jan_a":1994,"feb_a":1652,"mar_a":1049,"apr_a":857,"may_a":601,"q1a":4695,"q2a":1804,"jun_a":346,"jun_t":2785.0},{"name":"BOLD.CO SAS","kam":"EDUAR MALAGON","q1t":31734.0,"q2t":76520,"q3t":41669.0,"q4t":44837.0,"jan_t":10578.0,"feb_t":10578.0,"mar_t":10578.0,"apr_t":25506.7,"may_t":25506.7,"jan_a":22026,"feb_a":24851,"mar_a":25149,"apr_a":25316,"may_a":28571,"q1a":72026,"q2a":80676,"jun_a":26789,"jun_t":25506.7},{"name":"CI PACK BLUE S.A.S","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0,"q3t":2040.0,"q4t":3760.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":-3,"mar_a":0,"apr_a":0,"may_a":0,"q1a":-3,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"CIFIN S.A.S","kam":"EDER LEONARDO CANTOR","q1t":5493.0,"q2t":7476,"q3t":6194.0,"q4t":5943.0,"jan_t":1831.0,"feb_t":1831.0,"mar_t":1831.0,"apr_t":2492.0,"may_t":2492.0,"jan_a":1917,"feb_a":1839,"mar_a":2053,"apr_a":1937,"may_a":1994,"q1a":5809,"q2a":5549,"jun_a":1618,"jun_t":2492.0},{"name":"FRISBY S.A.","kam":"EDUAR MALAGON","q1t":26715.0,"q2t":36767,"q3t":34535.0,"q4t":38586.0,"jan_t":8905.0,"feb_t":8905.0,"mar_t":8905.0,"apr_t":12255.7,"may_t":12255.7,"jan_a":9305,"feb_a":8912,"mar_a":11118,"apr_a":9725,"may_a":10804,"q1a":29335,"q2a":32156,"jun_a":11627,"jun_t":12255.7},{"name":"COLEGIO COLOMBIANO DE PSICOLOGOS","kam":"EDER LEONARDO CANTOR","q1t":14994.0,"q2t":16794,"q3t":13988.0,"q4t":17167.0,"jan_t":4998.0,"feb_t":4998.0,"mar_t":4998.0,"apr_t":5598.0,"may_t":5598.0,"jan_a":5880,"feb_a":4578,"mar_a":6336,"apr_a":6635,"may_a":7408,"q1a":16794,"q2a":18483,"jun_a":4440,"jun_t":5598.0},{"name":"COLEGIO ROCHESTER SAS","kam":"PAULA RODRIGUEZ","q1t":8601.0,"q2t":19885,"q3t":7964.0,"q4t":8345.0,"jan_t":2867.0,"feb_t":2867.0,"mar_t":2867.0,"apr_t":6628.3,"may_t":6628.3,"jan_a":9334,"feb_a":8174,"mar_a":8167,"apr_a":8766,"may_a":10322,"q1a":25675,"q2a":48689,"jun_a":29601,"jun_t":6628.3},{"name":"COMCEL S.A","kam":"EDER LEONARDO CANTOR","q1t":13515.0,"q2t":13673,"q3t":12983.0,"q4t":11293.0,"jan_t":4505.0,"feb_t":4505.0,"mar_t":4505.0,"apr_t":4557.7,"may_t":4557.7,"jan_a":5127,"feb_a":5266,"mar_a":5450,"apr_a":5360,"may_a":5485,"q1a":15843,"q2a":16186,"jun_a":5341,"jun_t":4557.7},{"name":"COMERCIALIZADORA BALDINI SA BALDINI","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"COMPARAONLINE COLOMBIA LTDA","kam":"EDER LEONARDO CANTOR","q1t":7893.0,"q2t":8487,"q3t":6015.0,"q4t":5890.0,"jan_t":2631.0,"feb_t":2631.0,"mar_t":2631.0,"apr_t":2829.0,"may_t":2829.0,"jan_a":2464,"feb_a":2225,"mar_a":2724,"apr_a":2213,"may_a":2159,"q1a":7413,"q2a":6098,"jun_a":1726,"jun_t":2829.0},{"name":"GASES DEL CARIBE SA","kam":"EDUAR MALAGON","q1t":32418.0,"q2t":41328,"q3t":28422.0,"q4t":31689.0,"jan_t":10806.0,"feb_t":10806.0,"mar_t":10806.0,"apr_t":13776.0,"may_t":13776.0,"jan_a":13873,"feb_a":12465,"mar_a":13785,"apr_a":14227,"may_a":9295,"q1a":40123,"q2a":23522,"jun_a":0,"jun_t":13776.0},{"name":"UNAD","kam":"EDUAR MALAGON","q1t":33767.0,"q2t":11495,"q3t":38223.0,"q4t":13428.0,"jan_t":11255.7,"feb_t":11255.7,"mar_t":11255.7,"apr_t":3831.7,"may_t":3831.7,"jan_a":6599,"feb_a":1295,"mar_a":2382,"apr_a":660,"may_a":1440,"q1a":10276,"q2a":10485,"jun_a":8385,"jun_t":3831.7},{"name":"CORPORACION DE FERIAS Y EXPOSICIONES S.A.","kam":"EDER LEONARDO CANTOR","q1t":9486.0,"q2t":9486,"q3t":89590.0,"q4t":50833.0,"jan_t":3162.0,"feb_t":3162.0,"mar_t":3162.0,"apr_t":3162.0,"may_t":3162.0,"jan_a":583,"feb_a":2880,"mar_a":2823,"apr_a":21504,"may_a":15280,"q1a":6286,"q2a":47272,"jun_a":10488,"jun_t":3162.0},{"name":"CORPORACION UNIVERSITARIA DE ASTURIAS","kam":"EDER LEONARDO CANTOR","q1t":41147.0,"q2t":54291,"q3t":49455.0,"q4t":46048.0,"jan_t":13715.7,"feb_t":13715.7,"mar_t":13715.7,"apr_t":18097.0,"may_t":18097.0,"jan_a":16029,"feb_a":19917,"mar_a":18348,"apr_a":17764,"may_a":17022,"q1a":54294,"q2a":56030,"jun_a":21244,"jun_t":18097.0},{"name":"SUPERTIENDAS Y DROGUERIAS OLIMPICA S.A. - OLIMPICA S.A.","kam":"EDUAR MALAGON","q1t":20346.0,"q2t":16932,"q3t":16531.0,"q4t":17004.0,"jan_t":6782.0,"feb_t":6782.0,"mar_t":6782.0,"apr_t":5644.0,"may_t":5644.0,"jan_a":4277,"feb_a":7532,"mar_a":8035,"apr_a":7696,"may_a":8257,"q1a":19844,"q2a":23398,"jun_a":7445,"jun_t":5644.0},{"name":"CREACIONES NADAR SA","kam":"PAULA RODRIGUEZ","q1t":3385.0,"q2t":6455,"q3t":3174.0,"q4t":3090.0,"jan_t":1128.3,"feb_t":1128.3,"mar_t":1128.3,"apr_t":2151.7,"may_t":2151.7,"jan_a":1238,"feb_a":1203,"mar_a":1895,"apr_a":2000,"may_a":2067,"q1a":4336,"q2a":6043,"jun_a":1976,"jun_t":2151.7},{"name":"ETOTAL GAMING SAS","kam":"EDUAR MALAGON","q1t":20432.0,"q2t":31828,"q3t":17350.0,"q4t":18586.0,"jan_t":6810.7,"feb_t":6810.7,"mar_t":6810.7,"apr_t":10609.3,"may_t":10609.3,"jan_a":7449,"feb_a":7660,"mar_a":8902,"apr_a":9385,"may_a":9313,"q1a":24011,"q2a":28945,"jun_a":10247,"jun_t":10609.3},{"name":"DATAICO SAS","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":1271,"q3t":16480.0,"q4t":20166.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":423.7,"may_t":423.7,"jan_a":339,"feb_a":355,"mar_a":399,"apr_a":269,"may_a":295,"q1a":1093,"q2a":854,"jun_a":290,"jun_t":423.7},{"name":"DESARROLLOS TURISTICOS MG S.A.S.","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":4,"apr_a":0,"may_a":0,"q1a":4,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"CORPORACION UNIVERSITARIA REPUBLICANA","kam":"EDUAR MALAGON","q1t":18397.0,"q2t":8333,"q3t":16918.0,"q4t":15422.0,"jan_t":6132.3,"feb_t":6132.3,"mar_t":6132.3,"apr_t":2777.7,"may_t":2777.7,"jan_a":7782,"feb_a":11526,"mar_a":2289,"apr_a":1622,"may_a":3599,"q1a":21597,"q2a":16470,"jun_a":11249,"jun_t":2777.7},{"name":"CAMARA DE COMERCIO DEL CAUCA","kam":"EDUAR MALAGON","q1t":34802.0,"q2t":1000,"q3t":5123.0,"q4t":3809.0,"jan_t":11600.7,"feb_t":11600.7,"mar_t":11600.7,"apr_t":333.3,"may_t":333.3,"jan_a":871,"feb_a":1,"mar_a":0,"apr_a":0,"may_a":0,"q1a":872,"q2a":0,"jun_a":0,"jun_t":333.3},{"name":"CERESCOS LTDA","kam":"EDUAR MALAGON","q1t":12159.0,"q2t":13011,"q3t":14578.0,"q4t":15350.0,"jan_t":4053.0,"feb_t":4053.0,"mar_t":4053.0,"apr_t":4337.0,"may_t":4337.0,"jan_a":5995,"feb_a":4834,"mar_a":4886,"apr_a":4389,"may_a":5613,"q1a":15715,"q2a":16979,"jun_a":6977,"jun_t":4337.0},{"name":"SEGUROPARAVIAJE.COM S.A.S","kam":"EDUAR MALAGON","q1t":10377.0,"q2t":15104,"q3t":14300.0,"q4t":15075.0,"jan_t":3459.0,"feb_t":3459.0,"mar_t":3459.0,"apr_t":5034.7,"may_t":5034.7,"jan_a":3671,"feb_a":3589,"mar_a":4692,"apr_a":4282,"may_a":5659,"q1a":11952,"q2a":16374,"jun_a":6433,"jun_t":5034.7},{"name":"ECOTERMALES SAN VICENTE S.S","kam":"EDUAR MALAGON","q1t":0.0,"q2t":5000,"q3t":16064.0,"q4t":18066.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":1666.7,"may_t":1666.7,"jan_a":-37,"feb_a":0,"mar_a":987,"apr_a":3473,"may_a":1619,"q1a":950,"q2a":7012,"jun_a":1920,"jun_t":1666.7},{"name":"EDITORIAL SANTILLANA SAS","kam":"PAULA RODRIGUEZ","q1t":9176.0,"q2t":9276,"q3t":680.0,"q4t":2228.0,"jan_t":3058.7,"feb_t":3058.7,"mar_t":3058.7,"apr_t":3092.0,"may_t":3092.0,"jan_a":2952,"feb_a":4198,"mar_a":1022,"apr_a":277,"may_a":108,"q1a":8172,"q2a":427,"jun_a":42,"jun_t":3092.0},{"name":"EDUPOL SAS","kam":"PAULA RODRIGUEZ","q1t":9433.0,"q2t":8501,"q3t":9511.0,"q4t":11323.0,"jan_t":3144.3,"feb_t":3144.3,"mar_t":3144.3,"apr_t":2833.7,"may_t":2833.7,"jan_a":2655,"feb_a":4436,"mar_a":1446,"apr_a":713,"may_a":605,"q1a":8537,"q2a":1977,"jun_a":659,"jun_t":2833.7},{"name":"LAFAM S.A.S.","kam":"EDUAR MALAGON","q1t":8686.0,"q2t":13609,"q3t":9770.0,"q4t":12004.0,"jan_t":2895.3,"feb_t":2895.3,"mar_t":2895.3,"apr_t":4536.3,"may_t":4536.3,"jan_a":3837,"feb_a":3668,"mar_a":3738,"apr_a":3617,"may_a":4242,"q1a":11243,"q2a":11510,"jun_a":3651,"jun_t":4536.3},{"name":"ESCAPARTE SAS","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"ESTIBOL S.A","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"ETB","kam":"PAULA RODRIGUEZ","q1t":4241.0,"q2t":4636,"q3t":4722.0,"q4t":5202.0,"jan_t":1413.7,"feb_t":1413.7,"mar_t":1413.7,"apr_t":1545.3,"may_t":1545.3,"jan_a":1295,"feb_a":1151,"mar_a":1437,"apr_a":1483,"may_a":1587,"q1a":3883,"q2a":4505,"jun_a":1435,"jun_t":1545.3},{"name":"TOP DOCTORS COLOMBIA SAS","kam":"EDUAR MALAGON","q1t":8529.0,"q2t":8886,"q3t":10425.0,"q4t":11980.0,"jan_t":2843.0,"feb_t":2843.0,"mar_t":2843.0,"apr_t":2962.0,"may_t":2962.0,"jan_a":2560,"feb_a":2600,"mar_a":2540,"apr_a":2043,"may_a":2223,"q1a":7700,"q2a":6508,"jun_a":2242,"jun_t":2962.0},{"name":"EXPERIAN COLOMBIA S.A","kam":"EDER LEONARDO CANTOR","q1t":11330.0,"q2t":11360,"q3t":11579.0,"q4t":11846.0,"jan_t":3776.7,"feb_t":3776.7,"mar_t":3776.7,"apr_t":3786.7,"may_t":3786.7,"jan_a":3433,"feb_a":3374,"mar_a":3393,"apr_a":3247,"may_a":3159,"q1a":10200,"q2a":9367,"jun_a":2961,"jun_t":3786.7},{"name":"EXPERIAN COLOMBIA S.A - TOKENIZACION","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"PLASTICOS RIMAX S.A.S","kam":"EDUAR MALAGON","q1t":7707.0,"q2t":9125,"q3t":8788.0,"q4t":13267.0,"jan_t":2569.0,"feb_t":2569.0,"mar_t":2569.0,"apr_t":3041.7,"may_t":3041.7,"jan_a":2810,"feb_a":3222,"mar_a":3467,"apr_a":2929,"may_a":3139,"q1a":9499,"q2a":10321,"jun_a":4253,"jun_t":3041.7},{"name":"PLINTRON COLOMBIA SAS","kam":"EDUAR MALAGON","q1t":2114.0,"q2t":5215.0,"q3t":9409.0,"q4t":16977.0,"jan_t":704.7,"feb_t":704.7,"mar_t":704.7,"apr_t":1738.3,"may_t":1738.3,"jan_a":4,"feb_a":935,"mar_a":1328,"apr_a":1349,"may_a":1410,"q1a":2267,"q2a":4124,"jun_a":1365,"jun_t":1738.3},{"name":"FITNESS24SEVEN COLOMBIA SAS","kam":"EDER LEONARDO CANTOR","q1t":82970.0,"q2t":115089,"q3t":101879.0,"q4t":98297.0,"jan_t":27656.7,"feb_t":27656.7,"mar_t":27656.7,"apr_t":38363.0,"may_t":38363.0,"jan_a":31819,"feb_a":31778,"mar_a":33408,"apr_a":32944,"may_a":32151,"q1a":97005,"q2a":98398,"jun_a":33303,"jun_t":38363.0},{"name":"VOSAVOS S.A.S","kam":"EDUAR MALAGON","q1t":13634.0,"q2t":18020,"q3t":4718.0,"q4t":4421.0,"jan_t":4544.7,"feb_t":4544.7,"mar_t":4544.7,"apr_t":6006.7,"may_t":6006.7,"jan_a":7699,"feb_a":7003,"mar_a":6831,"apr_a":5905,"may_a":6673,"q1a":21533,"q2a":18979,"jun_a":6401,"jun_t":6006.7},{"name":"EXPRESO BRASILIA SA","kam":"EDUAR MALAGON","q1t":6126.0,"q2t":7507,"q3t":6502.0,"q4t":10370.0,"jan_t":2042.0,"feb_t":2042.0,"mar_t":2042.0,"apr_t":2502.3,"may_t":2502.3,"jan_a":4249,"feb_a":1621,"mar_a":2659,"apr_a":2538,"may_a":1737,"q1a":8529,"q2a":6283,"jun_a":2008,"jun_t":2502.3},{"name":"FRUBANA SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"FUNDACION PARA LA EDUCACION SUPERIOR SAN MATEO","kam":"PAULA RODRIGUEZ","q1t":23203.0,"q2t":26940,"q3t":28755.0,"q4t":40030.0,"jan_t":7734.3,"feb_t":7734.3,"mar_t":7734.3,"apr_t":8980.0,"may_t":8980.0,"jan_a":16405,"feb_a":9058,"mar_a":7399,"apr_a":6910,"may_a":17451,"q1a":32862,"q2a":38583,"jun_a":14222,"jun_t":8980.0},{"name":"FUNERAL INTERNATIONAL GROUP S.A.S.","kam":"PAULA RODRIGUEZ","q1t":25322.0,"q2t":26046,"q3t":27359.0,"q4t":29400.0,"jan_t":8440.7,"feb_t":8440.7,"mar_t":8440.7,"apr_t":8682.0,"may_t":8682.0,"jan_a":10080,"feb_a":10061,"mar_a":9892,"apr_a":9654,"may_a":9816,"q1a":30033,"q2a":28796,"jun_a":9326,"jun_t":8682.0},{"name":"GAMES & BETTING SAS","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":-3,"mar_a":0,"apr_a":0,"may_a":0,"q1a":-3,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"MODANOVA SAS","kam":"EDUAR MALAGON","q1t":7843.0,"q2t":11109,"q3t":6064.0,"q4t":9502.0,"jan_t":2614.3,"feb_t":2614.3,"mar_t":2614.3,"apr_t":3703.0,"may_t":3703.0,"jan_a":2734,"feb_a":2803,"mar_a":3051,"apr_a":2440,"may_a":2901,"q1a":8588,"q2a":8492,"jun_a":3151,"jun_t":3703.0},{"name":"GROUPE SEB ANDEAN SA","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"GRUPO R5 LIMITADA","kam":"CRISTINA SAENZ","q1t":100542.0,"q2t":30000,"q3t":131612.0,"q4t":25776.0,"jan_t":33514.0,"feb_t":33514.0,"mar_t":33514.0,"apr_t":10000.0,"may_t":10000.0,"jan_a":314,"feb_a":484,"mar_a":5390,"apr_a":8109,"may_a":6613,"q1a":6188,"q2a":25700,"jun_a":10978,"jun_t":10000.0},{"name":"GRUPO VINNARE SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"HECTOR FABIO ARISTIZABAL GRISALES","kam":"Not Assigned","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"HOTELES DE CAMERON","kam":"PAULA RODRIGUEZ","q1t":5223.0,"q2t":5648,"q3t":5869.0,"q4t":5800.0,"jan_t":1741.0,"feb_t":1741.0,"mar_t":1741.0,"apr_t":1882.7,"may_t":1882.7,"jan_a":1361,"feb_a":1270,"mar_a":1368,"apr_a":1348,"may_a":1359,"q1a":3999,"q2a":3702,"jun_a":995,"jun_t":1882.7},{"name":"HUBSPOT LATIN AMERICA SAS","kam":"EDER LEONARDO CANTOR","q1t":30728.0,"q2t":30728,"q3t":31632.0,"q4t":35816.0,"jan_t":10242.7,"feb_t":10242.7,"mar_t":10242.7,"apr_t":10242.7,"may_t":10242.7,"jan_a":15266,"feb_a":14449,"mar_a":20332,"apr_a":17533,"may_a":17305,"q1a":50047,"q2a":53115,"jun_a":18277,"jun_t":10242.7},{"name":"IGLESIA EL LUGAR DE SU PRESENCIA","kam":"EDER LEONARDO CANTOR","q1t":4955.0,"q2t":7850,"q3t":4780.0,"q4t":6026.0,"jan_t":1651.7,"feb_t":1651.7,"mar_t":1651.7,"apr_t":2616.7,"may_t":2616.7,"jan_a":1787,"feb_a":1952,"mar_a":2156,"apr_a":1979,"may_a":2289,"q1a":5895,"q2a":6445,"jun_a":2177,"jun_t":2616.7},{"name":"INSOFT LTDA","kam":"PAULA RODRIGUEZ","q1t":12676.0,"q2t":23003,"q3t":11483.0,"q4t":12319.0,"jan_t":4225.3,"feb_t":4225.3,"mar_t":4225.3,"apr_t":7667.7,"may_t":7667.7,"jan_a":6525,"feb_a":6525,"mar_a":6318,"apr_a":5202,"may_a":5390,"q1a":19368,"q2a":16034,"jun_a":5442,"jun_t":7667.7},{"name":"INSTITUTO PARA EL DESARROLLO DE ANTIOQUIA IDEA","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"INVERSIONES FAMICO TURISMO SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"INVERSIONES GROBMA SAS","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":161,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":161,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"FALABELLA DE COLOMBIA S A","kam":"EDUAR MALAGON","q1t":4826.0,"q2t":6018,"q3t":6229.0,"q4t":10045.0,"jan_t":1608.7,"feb_t":1608.7,"mar_t":1608.7,"apr_t":2006.0,"may_t":2006.0,"jan_a":1346,"feb_a":723,"mar_a":679,"apr_a":883,"may_a":870,"q1a":2748,"q2a":2172,"jun_a":419,"jun_t":2006.0},{"name":"IROTAMA S.A.S.","kam":"EDER LEONARDO CANTOR","q1t":26593.0,"q2t":33074,"q3t":37471.0,"q4t":36424.0,"jan_t":8864.3,"feb_t":8864.3,"mar_t":8864.3,"apr_t":11024.7,"may_t":11024.7,"jan_a":9812,"feb_a":11644,"mar_a":10524,"apr_a":9189,"may_a":10258,"q1a":31980,"q2a":28193,"jun_a":8746,"jun_t":11024.7},{"name":"ISHAJON SAS","kam":"PAULA RODRIGUEZ","q1t":1245.0,"q2t":2188,"q3t":2003.0,"q4t":3279.0,"jan_t":415.0,"feb_t":415.0,"mar_t":415.0,"apr_t":729.3,"may_t":729.3,"jan_a":372,"feb_a":373,"mar_a":676,"apr_a":697,"may_a":499,"q1a":1421,"q2a":1791,"jun_a":595,"jun_t":729.3},{"name":"JAMAR S.A.","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":-8,"mar_a":32,"apr_a":0,"may_a":0,"q1a":24,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"JMALUCELLI TRAVELERS SEGUROS S.A","kam":"EDER LEONARDO CANTOR","q1t":10487.0,"q2t":19078,"q3t":10552.0,"q4t":13082.0,"jan_t":3495.7,"feb_t":3495.7,"mar_t":3495.7,"apr_t":6359.3,"may_t":6359.3,"jan_a":4515,"feb_a":5575,"mar_a":7679,"apr_a":6360,"may_a":7415,"q1a":17769,"q2a":20355,"jun_a":6580,"jun_t":6359.3},{"name":"KRAQUET GRUPO TEXTIL SAS","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":4000,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":1333.3,"may_t":1333.3,"jan_a":0,"feb_a":282,"mar_a":1907,"apr_a":390,"may_a":0,"q1a":2189,"q2a":390,"jun_a":0,"jun_t":1333.3},{"name":"DAFLORES.COM","kam":"EDUAR MALAGON","q1t":6751.0,"q2t":7487,"q3t":6385.0,"q4t":6014.0,"jan_t":2250.3,"feb_t":2250.3,"mar_t":2250.3,"apr_t":2495.7,"may_t":2495.7,"jan_a":1361,"feb_a":2509,"mar_a":2813,"apr_a":1732,"may_a":4203,"q1a":6683,"q2a":7134,"jun_a":1199,"jun_t":2495.7},{"name":"EASTFLY - EFECTY","kam":"EDUAR MALAGON","q1t":5680.0,"q2t":5489,"q3t":6350.0,"q4t":7539.0,"jan_t":1893.3,"feb_t":1893.3,"mar_t":1893.3,"apr_t":1829.7,"may_t":1829.7,"jan_a":1699,"feb_a":1570,"mar_a":1695,"apr_a":1504,"may_a":1503,"q1a":4964,"q2a":4545,"jun_a":1538,"jun_t":1829.7},{"name":"DISTRIBUIDORA PASTEUR S.A","kam":"EDUAR MALAGON","q1t":5785.0,"q2t":6232,"q3t":6377.0,"q4t":5606.0,"jan_t":1928.3,"feb_t":1928.3,"mar_t":1928.3,"apr_t":2077.3,"may_t":2077.3,"jan_a":1950,"feb_a":1931,"mar_a":1925,"apr_a":1956,"may_a":1854,"q1a":5806,"q2a":5578,"jun_a":1768,"jun_t":2077.3},{"name":"LINA TEJEIRO SAS","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"LINIO COLOMBIA S.A.S.","kam":"CRISTINA SAENZ","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"LOGISTICA FLASH COLOMBIA SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"M1 TRANSPORTES SUSTENTAVEIS LTDA SUCURSAL COLOMBIA","kam":"EDER LEONARDO CANTOR","q1t":7806.0,"q2t":7257,"q3t":7543.0,"q4t":6709.0,"jan_t":2602.0,"feb_t":2602.0,"mar_t":2602.0,"apr_t":2419.0,"may_t":2419.0,"jan_a":291,"feb_a":317,"mar_a":195,"apr_a":130,"may_a":185,"q1a":803,"q2a":461,"jun_a":146,"jun_t":2419.0},{"name":"MADECENTRO COLOMBIA S.A.S","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"CAMARA DE COMERCIO ITALIANA PARA COLOMBIA","kam":"EDUAR MALAGON","q1t":4539.0,"q2t":4698.0,"q3t":5386.0,"q4t":6033.0,"jan_t":1513.0,"feb_t":1513.0,"mar_t":1513.0,"apr_t":1566.0,"may_t":1566.0,"jan_a":1768,"feb_a":1062,"mar_a":-4,"apr_a":-4,"may_a":0,"q1a":2826,"q2a":-4,"jun_a":0,"jun_t":1566.0},{"name":"MENTEX SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"MERQUEO SAS","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"COOPERATIVA MEDICA DEL VALLE Y DE PROFESIONALES DE COLOMBIA COOMEVA","kam":"EDUAR MALAGON","q1t":2405.0,"q2t":3841,"q3t":6155.0,"q4t":7915.0,"jan_t":801.7,"feb_t":801.7,"mar_t":801.7,"apr_t":1280.3,"may_t":1280.3,"jan_a":670,"feb_a":504,"mar_a":679,"apr_a":934,"may_a":1014,"q1a":1853,"q2a":2862,"jun_a":914,"jun_t":1280.3},{"name":"MOONS COLOMBIA SAS","kam":"EDER LEONARDO CANTOR","q1t":20084.0,"q2t":20681,"q3t":18838.0,"q4t":16767.0,"jan_t":6694.7,"feb_t":6694.7,"mar_t":6694.7,"apr_t":6893.7,"may_t":6893.7,"jan_a":1991,"feb_a":2637,"mar_a":2757,"apr_a":2392,"may_a":2419,"q1a":7385,"q2a":6949,"jun_a":2138,"jun_t":6893.7},{"name":"MUNICIPIO DE CHIA","kam":"EDER LEONARDO CANTOR","q1t":881.0,"q2t":907,"q3t":1143.0,"q4t":655.0,"jan_t":293.7,"feb_t":293.7,"mar_t":293.7,"apr_t":302.3,"may_t":302.3,"jan_a":102,"feb_a":173,"mar_a":632,"apr_a":874,"may_a":231,"q1a":907,"q2a":1192,"jun_a":87,"jun_t":302.3},{"name":"YANBAL DE COLOMBIA SA","kam":"EDUAR MALAGON","q1t":3621.0,"q2t":5060,"q3t":3693.0,"q4t":4402.0,"jan_t":1207.0,"feb_t":1207.0,"mar_t":1207.0,"apr_t":1686.7,"may_t":1686.7,"jan_a":1365,"feb_a":1274,"mar_a":1382,"apr_a":1343,"may_a":1439,"q1a":4021,"q2a":4169,"jun_a":1387,"jun_t":1686.7},{"name":"INVERSIONES Y MODA ARISTIZABAL SAS","kam":"EDUAR MALAGON","q1t":3594.0,"q2t":6649,"q3t":4461.0,"q4t":3894.0,"jan_t":1198.0,"feb_t":1198.0,"mar_t":1198.0,"apr_t":2216.3,"may_t":2216.3,"jan_a":1648,"feb_a":1663,"mar_a":1826,"apr_a":1383,"may_a":2943,"q1a":5137,"q2a":6215,"jun_a":1889,"jun_t":2216.3},{"name":"NAFTALINA S.A.S","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":12362,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":4120.7,"may_t":4120.7,"jan_a":4425,"feb_a":2658,"mar_a":2959,"apr_a":2416,"may_a":4128,"q1a":10042,"q2a":10326,"jun_a":3782,"jun_t":4120.7},{"name":"NIKKEN","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"OPERADOR NACIONAL DE JUEGOS SAS","kam":"PAULA RODRIGUEZ","q1t":86972.0,"q2t":120000,"q3t":120015.0,"q4t":117996.0,"jan_t":28990.7,"feb_t":28990.7,"mar_t":28990.7,"apr_t":40000.0,"may_t":40000.0,"jan_a":59460,"feb_a":49110,"mar_a":51405,"apr_a":48258,"may_a":29203,"q1a":159975,"q2a":82100,"jun_a":4639,"jun_t":40000.0},{"name":"OPORTUNIDAD ACN MEXICO S DE RL DE CV","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"PAGOS AUTOMATICOS DE COLOMBIA SAS","kam":"PAULA RODRIGUEZ","q1t":7670.0,"q2t":14638,"q3t":7747.0,"q4t":7895.0,"jan_t":2556.7,"feb_t":2556.7,"mar_t":2556.7,"apr_t":4879.3,"may_t":4879.3,"jan_a":5972,"feb_a":5116,"mar_a":6123,"apr_a":5587,"may_a":6249,"q1a":17211,"q2a":17882,"jun_a":6046,"jun_t":4879.3},{"name":"PALLOMARO SA","kam":"EDER LEONARDO CANTOR","q1t":4944.0,"q2t":7319,"q3t":6651.0,"q4t":5794.0,"jan_t":1648.0,"feb_t":1648.0,"mar_t":1648.0,"apr_t":2439.7,"may_t":2439.7,"jan_a":2425,"feb_a":1406,"mar_a":3037,"apr_a":2119,"may_a":1960,"q1a":6868,"q2a":6498,"jun_a":2419,"jun_t":2439.7},{"name":"C.I HERMECO S.A","kam":"EDUAR MALAGON","q1t":1517.0,"q2t":2249,"q3t":2337.0,"q4t":5544.0,"jan_t":505.7,"feb_t":505.7,"mar_t":505.7,"apr_t":749.7,"may_t":749.7,"jan_a":285,"feb_a":443,"mar_a":666,"apr_a":625,"may_a":638,"q1a":1394,"q2a":1985,"jun_a":722,"jun_t":749.7},{"name":"PERMODA LTDA","kam":"EDER LEONARDO CANTOR","q1t":7446.0,"q2t":10990,"q3t":7827.0,"q4t":18136.0,"jan_t":2482.0,"feb_t":2482.0,"mar_t":2482.0,"apr_t":3663.3,"may_t":3663.3,"jan_a":2003,"feb_a":3401,"mar_a":2411,"apr_a":2552,"may_a":1969,"q1a":7815,"q2a":6669,"jun_a":2148,"jun_t":3663.3},{"name":"MUNICIPIO DE ENVIGADO","kam":"EDUAR MALAGON","q1t":2837.0,"q2t":5759,"q3t":2248.0,"q4t":1446.0,"jan_t":945.7,"feb_t":945.7,"mar_t":945.7,"apr_t":1919.7,"may_t":1919.7,"jan_a":723,"feb_a":770,"mar_a":1738,"apr_a":918,"may_a":1052,"q1a":3231,"q2a":2875,"jun_a":905,"jun_t":1919.7},{"name":"PLANETA HOMA S.A.S","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":-14,"feb_a":62,"mar_a":89,"apr_a":15,"may_a":13,"q1a":137,"q2a":35,"jun_a":7},{"name":"COOMEVA MEDICINA PREPAGADA","kam":"EDUAR MALAGON","q1t":1720.0,"q2t":15361,"q3t":1730.0,"q4t":2230.0,"jan_t":573.3,"feb_t":573.3,"mar_t":573.3,"apr_t":5120.3,"may_t":5120.3,"jan_a":4729,"feb_a":4548,"mar_a":5052,"apr_a":4786,"may_a":4894,"q1a":14329,"q2a":14573,"jun_a":4893,"jun_t":5120.3},{"name":"PLATZI SAS","kam":"PAULA RODRIGUEZ","q1t":7297.0,"q2t":5960,"q3t":8524.0,"q4t":21362.0,"jan_t":2432.3,"feb_t":2432.3,"mar_t":2432.3,"apr_t":1986.7,"may_t":1986.7,"jan_a":2351,"feb_a":1300,"mar_a":1794,"apr_a":1370,"may_a":1614,"q1a":5445,"q2a":3810,"jun_a":826,"jun_t":1986.7},{"name":"POSITIVA COMPAÑIA DE SEGUROS S. A.","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"PROTUCARIBE","kam":"PAULA RODRIGUEZ","q1t":40059.0,"q2t":30000,"q3t":40857.0,"q4t":36025.0,"jan_t":13353.0,"feb_t":13353.0,"mar_t":13353.0,"apr_t":10000.0,"may_t":10000.0,"jan_a":12261,"feb_a":9708,"mar_a":11580,"apr_a":6434,"may_a":5369,"q1a":33549,"q2a":20233,"jun_a":8430,"jun_t":10000.0},{"name":"RANKING SPORT","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"ROSAS DON ELOY LTDA","kam":"PAULA RODRIGUEZ","q1t":11589.0,"q2t":13993,"q3t":10308.0,"q4t":10434.0,"jan_t":3863.0,"feb_t":3863.0,"mar_t":3863.0,"apr_t":4664.3,"may_t":4664.3,"jan_a":2294,"feb_a":4385,"mar_a":3820,"apr_a":1612,"may_a":3551,"q1a":10499,"q2a":6574,"jun_a":1411,"jun_t":4664.3},{"name":"LA PREVISORA S.A COMPAÑIA DE SEGUROS","kam":"EDUAR MALAGON","q1t":1814.0,"q2t":2467,"q3t":1453.0,"q4t":1613.0,"jan_t":604.7,"feb_t":604.7,"mar_t":604.7,"apr_t":822.3,"may_t":822.3,"jan_a":613,"feb_a":628,"mar_a":677,"apr_a":634,"may_a":615,"q1a":1918,"q2a":1858,"jun_a":609,"jun_t":822.3},{"name":"SERVICIOS POSTALES NACIONALES S.A","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"SOCIEDAD COMERCIALIZACION INTERNACIONAL LEONISA SA","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"SODIMAC COLOMBIA S.A","kam":"PAULA RODRIGUEZ","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"SOLUCIONES ALEGRA S.A.S","kam":"CRISTINA SAENZ","q1t":67668.0,"q2t":67668,"q3t":86551.0,"q4t":99888.0,"jan_t":22556.0,"feb_t":22556.0,"mar_t":22556.0,"apr_t":22556.0,"may_t":22556.0,"jan_a":14053,"feb_a":10117,"mar_a":10153,"apr_a":21416,"may_a":28228,"q1a":34323,"q2a":61448,"jun_a":11804,"jun_t":22556.0},{"name":"SOMOS NETWORKS COLOMBIA SAS BIC","kam":"CRISTINA SAENZ","q1t":63597.0,"q2t":63597,"q3t":72389.0,"q4t":74399.0,"jan_t":21199.0,"feb_t":21199.0,"mar_t":21199.0,"apr_t":21199.0,"may_t":21199.0,"jan_a":27965,"feb_a":27712,"mar_a":9846,"apr_a":7468,"may_a":7035,"q1a":65523,"q2a":21238,"jun_a":6735,"jun_t":21199.0},{"name":"DIRECTV","kam":"EDUAR MALAGON","q1t":601.0,"q2t":1466,"q3t":590.0,"q4t":505.0,"jan_t":200.3,"feb_t":200.3,"mar_t":200.3,"apr_t":488.7,"may_t":488.7,"jan_a":446,"feb_a":483,"mar_a":537,"apr_a":522,"may_a":580,"q1a":1466,"q2a":1670,"jun_a":568,"jun_t":488.7},{"name":"SPORTIUM APUESTAS COLOMBIA","kam":"EDER LEONARDO CANTOR","q1t":7034.0,"q2t":15886,"q3t":3255.0,"q4t":3621.0,"jan_t":2344.7,"feb_t":2344.7,"mar_t":2344.7,"apr_t":5295.3,"may_t":5295.3,"jan_a":2810,"feb_a":4461,"mar_a":5891,"apr_a":5844,"may_a":5214,"q1a":13162,"q2a":16242,"jun_a":5184,"jun_t":5295.3},{"name":"BANCO COOMEVA SA","kam":"EDUAR MALAGON","q1t":505.0,"q2t":552,"q3t":508.0,"q4t":611.0,"jan_t":168.3,"feb_t":168.3,"mar_t":168.3,"apr_t":184.0,"may_t":184.0,"jan_a":166,"feb_a":166,"mar_a":166,"apr_a":166,"may_a":166,"q1a":498,"q2a":498,"jun_a":166,"jun_t":184.0},{"name":"SU PRESENCIA PRODUCCIONES LTDA","kam":"EDER LEONARDO CANTOR","q1t":5529.0,"q2t":6132,"q3t":5411.0,"q4t":7222.0,"jan_t":1843.0,"feb_t":1843.0,"mar_t":1843.0,"apr_t":2044.0,"may_t":2044.0,"jan_a":1555,"feb_a":2624,"mar_a":2434,"apr_a":1514,"may_a":1488,"q1a":6613,"q2a":4203,"jun_a":1201,"jun_t":2044.0},{"name":"AGENCIA DE SEGUROS FALABELLA LTDA","kam":"EDUAR MALAGON","q1t":34.0,"q2t":423,"q3t":35.0,"q4t":13.0,"jan_t":11.3,"feb_t":11.3,"mar_t":11.3,"apr_t":141.0,"may_t":141.0,"jan_a":61,"feb_a":35,"mar_a":116,"apr_a":155,"may_a":168,"q1a":212,"q2a":468,"jun_a":145,"jun_t":141.0},{"name":"SURTICOSMETICOS HF EU","kam":"Not Assigned","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"TECLINO SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"TENNIS S.A.","kam":"CRISTINA SAENZ","q1t":0.0,"q2t":2000,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":666.7,"may_t":666.7,"jan_a":625,"feb_a":474,"mar_a":732,"apr_a":656,"may_a":935,"q1a":1831,"q2a":2713,"jun_a":1122,"jun_t":666.7},{"name":"ENGENIS SPA","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"LANDERS Y CIA S.A.S","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"TRAFALGAR HOLDINGS DE COLOMBIA SAS","kam":"EDER LEONARDO CANTOR","q1t":2987.0,"q2t":4518,"q3t":2503.0,"q4t":1956.0,"jan_t":995.7,"feb_t":995.7,"mar_t":995.7,"apr_t":1506.0,"may_t":1506.0,"jan_a":2384,"feb_a":1123,"mar_a":1011,"apr_a":406,"may_a":364,"q1a":4518,"q2a":1028,"jun_a":258,"jun_t":1506.0},{"name":"TRAGUATAN SAS","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"TUGO PERU SAC","kam":"PAULA RODRIGUEZ","q1t":181.0,"q2t":746,"q3t":251.0,"q4t":296.0,"jan_t":60.3,"feb_t":60.3,"mar_t":60.3,"apr_t":248.7,"may_t":248.7,"jan_a":70,"feb_a":107,"mar_a":205,"apr_a":174,"may_a":134,"q1a":382,"q2a":509,"jun_a":201,"jun_t":248.7},{"name":"TUGO SAS","kam":"PAULA RODRIGUEZ","q1t":45520.0,"q2t":51279,"q3t":48540.0,"q4t":59195.0,"jan_t":15173.3,"feb_t":15173.3,"mar_t":15173.3,"apr_t":17093.0,"may_t":17093.0,"jan_a":15936,"feb_a":15787,"mar_a":17935,"apr_a":14006,"may_a":17963,"q1a":49658,"q2a":47101,"jun_a":15132,"jun_t":17093.0},{"name":"UBJONLINE INC","kam":"EDER LEONARDO CANTOR","q1t":6096.0,"q2t":5198,"q3t":6222.0,"q4t":9648.0,"jan_t":2032.0,"feb_t":2032.0,"mar_t":2032.0,"apr_t":1732.7,"may_t":1732.7,"jan_a":1537,"feb_a":465,"mar_a":1158,"apr_a":429,"may_a":74,"q1a":3160,"q2a":890,"jun_a":387,"jun_t":1732.7},{"name":"MEDIPIEL SA","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":2,"feb_a":11,"mar_a":0,"apr_a":0,"may_a":0,"q1a":13,"q2a":0,"jun_a":0,"jun_t":0.0},{"name":"UNIVERSIDAD BENITO JUAREZ ONLINE","kam":"EDER LEONARDO CANTOR","q1t":28452.0,"q2t":32960,"q3t":38502.0,"q4t":38875.0,"jan_t":9484.0,"feb_t":9484.0,"mar_t":9484.0,"apr_t":10986.7,"may_t":10986.7,"jan_a":12380,"feb_a":9766,"mar_a":10814,"apr_a":16528,"may_a":12227,"q1a":32960,"q2a":39077,"jun_a":10322,"jun_t":10986.7},{"name":"UNIVERSIDAD DE INVESTIGACION Y DESARROLLO UDI","kam":"EDER LEONARDO CANTOR","q1t":20338.0,"q2t":20291,"q3t":48193.0,"q4t":42344.0,"jan_t":6779.3,"feb_t":6779.3,"mar_t":6779.3,"apr_t":6763.7,"may_t":6763.7,"jan_a":10597,"feb_a":8752,"mar_a":4200,"apr_a":2945,"may_a":4258,"q1a":23549,"q2a":11965,"jun_a":4762,"jun_t":6763.7},{"name":"UNIVERSIDAD POPULAR DEL CESAR","kam":"EDER LEONARDO CANTOR","q1t":269.0,"q2t":0,"q3t":151.0,"q4t":65.0,"jan_t":89.7,"feb_t":89.7,"mar_t":89.7,"apr_t":0.0,"may_t":0.0,"jan_a":328,"feb_a":44,"mar_a":44,"apr_a":58,"may_a":71,"q1a":416,"q2a":180,"jun_a":51,"jun_t":0.0},{"name":"UNIVERSIDAD SERGIO ARBOLEDA","kam":"EDER LEONARDO CANTOR","q1t":19917.0,"q2t":31085,"q3t":24472.0,"q4t":38068.0,"jan_t":6639.0,"feb_t":6639.0,"mar_t":6639.0,"apr_t":10361.7,"may_t":10361.7,"jan_a":13391,"feb_a":6236,"mar_a":3669,"apr_a":3767,"may_a":8488,"q1a":23296,"q2a":36697,"jun_a":24442,"jun_t":10361.7},{"name":"MUNICIPIO DE PEREIRA","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"PAPELES PRIMAVERA S A","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"ZION INTERNATIONAL UNIVERSITY INC","kam":"EDER LEONARDO CANTOR","q1t":7974.0,"q2t":7974,"q3t":6818.0,"q4t":5343.0,"jan_t":2658.0,"feb_t":2658.0,"mar_t":2658.0,"apr_t":2658.0,"may_t":2658.0,"jan_a":2102,"feb_a":2939,"mar_a":1941,"apr_a":1675,"may_a":1569,"q1a":6982,"q2a":4310,"jun_a":1066,"jun_t":2658.0},{"name":"CADENA COMERCIAL OXXO COLOMBIA SAS","kam":"EDER LEONARDO CANTOR","q1t":523.0,"q2t":1251,"q3t":1084.0,"q4t":1754.0,"jan_t":174.3,"feb_t":174.3,"mar_t":174.3,"apr_t":417.0,"may_t":417.0,"jan_a":230,"feb_a":159,"mar_a":344,"apr_a":488,"may_a":467,"q1a":733,"q2a":1285,"jun_a":330,"jun_t":417.0},{"name":"CLOSTER PHARMA S A S","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":82,"feb_a":64,"mar_a":126,"apr_a":85,"may_a":181,"q1a":272,"q2a":400,"jun_a":99},{"name":"GENERALI COLOMBIA VIDA COMPAÑIA DE SEGUROS S.A.","kam":"Not Assigned","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":148,"feb_a":137,"mar_a":108,"apr_a":76,"may_a":52,"q1a":393,"q2a":166,"jun_a":4},{"name":"STARK GYM","kam":"EDUAR MALAGON","q1t":0.0,"q2t":23008,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":7669.3,"may_t":7669.3,"jan_a":7283,"feb_a":7077,"mar_a":7227,"apr_a":7658,"may_a":7672,"q1a":21587,"q2a":22701,"jun_a":7371,"jun_t":7669.3},{"name":"REHEMMA S.A.S.","kam":"EDER LEONARDO CANTOR","q1t":1076.0,"q2t":1140.0,"q3t":1128.0,"q4t":1787.0,"jan_t":358.7,"feb_t":358.7,"mar_t":358.7,"apr_t":380.0,"may_t":380.0,"jan_a":381,"feb_a":386,"mar_a":918,"apr_a":717,"may_a":1019,"q1a":1685,"q2a":2548,"jun_a":812,"jun_t":380.0},{"name":"ALMACENES EXITO INVERSIONES SAS","kam":"EDER LEONARDO CANTOR","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":105,"feb_a":105,"mar_a":105,"apr_a":105,"may_a":105,"q1a":315,"q2a":315,"jun_a":0},{"name":"OXOHOTEL SAS","kam":"EDER LEONARDO CANTOR","q1t":1651.0,"q2t":4268.0,"q3t":8555.0,"q4t":17149.0,"jan_t":550.3,"feb_t":550.3,"mar_t":550.3,"apr_t":1422.7,"may_t":1422.7,"jan_a":74,"feb_a":839,"mar_a":1337,"apr_a":1962,"may_a":3103,"q1a":2250,"q2a":7974,"jun_a":2909,"jun_t":1422.7},{"name":"TIENDACOL S.A.S","kam":"EDUAR MALAGON","q1t":0.0,"q2t":0.0,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":0.0,"may_t":0.0,"jan_a":0,"feb_a":0,"mar_a":0,"apr_a":0,"may_a":0,"q1a":0,"q2a":0,"jun_a":0},{"name":"OPTICAS GMO COLOMBIA S A.S.","kam":"EDUAR MALAGON","q1t":0.0,"q2t":1284,"q3t":0.0,"q4t":0.0,"jan_t":0.0,"feb_t":0.0,"mar_t":0.0,"apr_t":428.0,"may_t":428.0,"jan_a":242,"feb_a":264,"mar_a":353,"apr_a":379,"may_a":547,"q1a":859,"q2a":1367,"jun_a":441,"jun_t":428.0},{"name":"ISDIN COLOMBIA SAS","kam":"PAULA RODRIGUEZ","q1t":1023.0,"q2t":1594,"q3t":3196.0,"q4t":6406.0,"jan_t":341.0,"feb_t":341.0,"mar_t":341.0,"apr_t":531.3,"may_t":531.3,"jan_a":403,"feb_a":251,"mar_a":285,"apr_a":358,"may_a":349,"q1a":939,"q2a":1020,"jun_a":313,"jun_t":531.3},{"name":"GENERALI COLOMBIA VIDA COMPA√ëIA DE SEGUROS S.A.","kam":"Not Assigned","q1t":0,"q2t":0,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":0,"may_t":0,"jun_t":0,"jan_a":149,"feb_a":137,"mar_a":108,"apr_a":40,"may_a":39,"jun_a":0,"q1a":395,"q2a":117},{"name":"LA PREVISORA S.A COMPA√ëIA DE SEGUROS","kam":"EDUAR MALAGON","q1t":0,"q2t":0,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":0,"may_t":0,"jun_t":0,"jan_a":615,"feb_a":630,"mar_a":680,"apr_a":634,"may_a":615,"jun_a":0,"q1a":1925,"q2a":1858},{"name":"INVERSIONES EN RECREACIoN DEPORTE Y SALUD","kam":"CRISTINA SAENZ","q1t":0,"q2t":1918,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":639.3,"may_t":639.3,"jun_t":639.3,"jan_a":550,"feb_a":572,"mar_a":602,"apr_a":559,"may_a":533,"jun_a":52,"q1a":1724,"q2a":1390},{"name":"KOMATSU COLOMBIA S.A.S.","kam":"CRISTINA SAENZ","q1t":0,"q2t":500,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":166.7,"may_t":166.7,"jun_t":166.7,"jan_a":44,"feb_a":116,"mar_a":107,"apr_a":134,"may_a":113,"jun_a":106,"q1a":267,"q2a":367},{"name":"SLANG STORE SAS","kam":"EDUAR MALAGON","q1t":0,"q2t":0,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":0,"may_t":0,"jun_t":0,"jan_a":1,"feb_a":2,"mar_a":2,"apr_a":0,"may_a":0,"jun_a":0,"q1a":5,"q2a":0},{"name":"REGUS COLOMBIA LIMITADA","kam":"CRISTINA SAENZ","q1t":0,"q2t":11000,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":3666.7,"may_t":3666.7,"jun_t":3666.7,"jan_a":3349,"feb_a":2777,"mar_a":3134,"apr_a":2986,"may_a":3447,"jun_a":2687,"q1a":9260,"q2a":9345},{"name":"BOLD CF COMPA√ëIA DE FINANCIAMIENTO S.A","kam":"EDUAR MALAGON","q1t":0,"q2t":0,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":0,"may_t":0,"jun_t":0,"jan_a":2434,"feb_a":4373,"mar_a":6946,"apr_a":5113,"may_a":5618,"jun_a":0,"q1a":13753,"q2a":16002},{"name":"AMERICAN SCHOOL WAY","kam":"CRISTINA SAENZ","q1t":0,"q2t":1372,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":457.3,"may_t":457.3,"jun_t":457.3,"jan_a":700,"feb_a":349,"mar_a":324,"apr_a":112,"may_a":222,"jun_a":164,"q1a":1373,"q2a":543},{"name":"NANCY BELTRAN PEREZ","kam":"Not Assigned","q1t":0,"q2t":0,"q3t":0,"q4t":0,"jan_t":0,"feb_t":0,"mar_t":0,"apr_t":0,"may_t":0,"jun_t":0,"jan_a":0,"feb_a":0,"mar_a":0,"q1a":0,"apr_a":0,"may_a":0,"jun_a":0,"q2a":0}];
+
+function pctColor(pct) {
+  if (pct === null || isNaN(pct)) return '#9ca3af';
+  if (pct >= 100) return '#10b981';
+  if (pct >= 70)  return '#f59e0b';
+  return '#ef4444';
+}
+function fmtN(n) { return n ? '$' + Math.round(n).toLocaleString('en-US') : '—'; }
+function fmtPct(a, t) {
+  if (!t) return a > 0 ? '<span style="color:#6366f1;font-weight:700">Sin target</span>' : '—';
+  const p = Math.round(a / t * 100);
+  const c = pctColor(p);
+  const w = Math.min(100, p);
+  return `<span style="color:${c};font-weight:700">${p}%</span> <span class="progress-bar-wrap"><span class="progress-bar" style="width:${w}%;background:${c}"></span></span>`;
+}
+
+function fmtCell(v) { return v ? '$' + Math.round(v).toLocaleString('en-US') : '—'; }
+function cellStyle(base) { return `style="text-align:right;padding:8px;background:${base}"`; }
+
+function renderMerchantTable(data) {
+  const sortKey = document.getElementById('sortFilter').value;
+  document.getElementById('merchantCount').textContent = data.length + ' comercio' + (data.length !== 1 ? 's' : '');
+
+  // Totals
+  const T = {jan_t:0,feb_t:0,mar_t:0,q1t:0,apr_t:0,may_t:0,jun_t:0,
+             jan_a:0,feb_a:0,mar_a:0,q1a:0,apr_a:0,may_a:0,jun_a:0,q2a:0};
+  data.forEach(m => { for(const k in T) T[k] += m[k]||0; });
+
+  // Update target row
+  document.getElementById('tot_jan_t').textContent = fmtCell(T.jan_t);
+  document.getElementById('tot_feb_t').textContent = fmtCell(T.feb_t);
+  document.getElementById('tot_mar_t').textContent = fmtCell(T.mar_t);
+  document.getElementById('tot_q1t').textContent   = fmtCell(T.q1t);
+  // Use authoritative KAM-level Q2 targets (not merchant sum, which drifts)
+  const _kamQ2Map = {
+    '': 2042034,
+    'EDUAR MALAGON': 725368,
+    'EDER LEONARDO CANTOR': 575896,
+    'PAULA RODRIGUEZ': 560902,
+    'CRISTINA SAENZ': 178055,
+    'Not Assigned': 1813,
+  };
+  const _kamSel = document.getElementById('kamFilter').value;
+  const _q2Target = _kamQ2Map.hasOwnProperty(_kamSel) ? _kamQ2Map[_kamSel] : (T.apr_t+T.may_t+T.jun_t);
+  const _q2MonthT  = Math.round(_q2Target / 3);
+
+  document.getElementById('tot_apr_t').textContent = fmtCell(_q2MonthT);
+  document.getElementById('tot_may_t').textContent = fmtCell(_q2MonthT);
+  document.getElementById('tot_jun_t').textContent = fmtCell(_q2MonthT);
+  document.getElementById('tot_q2t').textContent   = fmtCell(_q2Target);
+
+  // Update actual row
+  document.getElementById('tot_jan_a').textContent = fmtCell(T.jan_a);
+  document.getElementById('tot_feb_a').textContent = fmtCell(T.feb_a);
+  document.getElementById('tot_mar_a').textContent = fmtCell(T.mar_a);
+  document.getElementById('tot_q1a').textContent   = fmtCell(T.q1a);
+  document.getElementById('tot_apr_a').textContent = fmtCell(T.apr_a);
+  document.getElementById('tot_may_a').textContent = fmtCell(T.may_a);
+  document.getElementById('tot_jun_a').textContent = fmtCell(T.jun_a);
+  document.getElementById('tot_q2a').textContent   = fmtCell(T.q2a);
+
+  // Summary chips
+  const q1Pct = T.q1t > 0 ? Math.round(T.q1a/T.q1t*100) : null;
+  const q2Pct = _q2Target > 0 ? Math.round(T.q2a/_q2Target*100) : null;
+  function chip(label, pct, actual, target) {
+    const c = pct === null ? '#9ca3af' : pct >= 100 ? '#10b981' : pct >= 70 ? '#f59e0b' : '#ef4444';
+    const bg = pct === null ? '#f3f4f6' : pct >= 100 ? '#d1fae5' : pct >= 70 ? '#fef3c7' : '#fee2e2';
+    return `<div style="background:${bg};border:1px solid ${c}55;border-radius:10px;padding:10px 16px;min-width:130px">
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;color:#6b7280;letter-spacing:0.4px;margin-bottom:3px">${label}</div>
+      <div style="font-size:1rem;font-weight:700;color:#111827">${fmtN(actual)}</div>
+      <div style="font-size:0.72rem;color:${c};font-weight:700;margin-top:2px">${pct !== null ? pct+'% vs target' : 'Sin target'}</div>
+    </div>`;
+  }
+  document.getElementById('merchantSummary').innerHTML =
+    chip('Q1 Cumplimiento', q1Pct, T.q1a, T.q1t) +
+    chip('Q2 Parcial (Abr–Jun)', q2Pct, T.q2a, _q2Target);
+
+  // Rows sorted
+  const sorted = [...data].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
+  const tbody = document.getElementById('merchantTableBody');
+  tbody.innerHTML = '';
+  sorted.forEach(m => {
+    const q1Pct = m.q1t > 0 ? Math.round(m.q1a/m.q1t*100) : null;
+    const q1c = q1Pct === null ? '#9ca3af' : q1Pct >= 100 ? '#10b981' : q1Pct >= 70 ? '#f59e0b' : '#ef4444';
+    const q2tM = (m.apr_t || 0) + (m.may_t || 0) + (m.jun_t || 0);
+    const q2PctM = q2tM > 0 ? Math.round((m.q2a||0)/q2tM*100) : null;
+    const q2cM = q2PctM === null ? '#9ca3af' : q2PctM >= 100 ? '#10b981' : q2PctM >= 70 ? '#f59e0b' : '#ef4444';
+    tbody.innerHTML += `<tr>
+      <td style="font-size:0.78rem;max-width:200px;padding:8px 12px">${m.name}</td>
+      <td style="font-size:0.72rem;color:#6b7280;white-space:nowrap;padding:8px">${m.kam}</td>
+      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.jan_a)}</td>
+      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.feb_a)}</td>
+      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.mar_a)}</td>
+      <td style="text-align:right;padding:8px;background:#e0f2fe;font-weight:700;border-right:2px solid #bae6fd">
+        ${fmtCell(m.q1a)}
+        ${m.q1t ? `<span style="display:block;font-size:0.68rem;color:${q1c};font-weight:700">${q1Pct}%</span>` : ''}
+      </td>
+      <td ${cellStyle('#fffbeb')}>${fmtCell(m.apr_a)}</td>
+      <td ${cellStyle('#fffbeb')}>${fmtCell(m.may_a)}</td>
+      <td ${cellStyle('#fffbeb')}>${fmtCell(m.jun_a)}</td>
+      <td style="text-align:right;padding:8px;background:#fef3c7;font-weight:700;border-left:2px solid #fde68a">
+        ${fmtCell(m.q2a)}
+        ${q2tM ? `<span style="display:block;font-size:0.68rem;color:${q2cM};font-weight:700">${q2PctM}%</span>` : ''}
+      </td>
+    </tr>`;
+  });
+}
+
+let currentFiltered = merchantData;
+
+function filterMerchants() {
+  const kam = document.getElementById('kamFilter').value;
+  const search = document.getElementById('merchantSearch').value.toLowerCase();
+  const perf = document.getElementById('perfFilter').value;
+  currentFiltered = merchantData.filter(m => {
+    if (kam && m.kam !== kam) return false;
+    if (search && !m.name.toLowerCase().includes(search)) return false;
+    if (perf) {
+      const q2tM = (m.apr_t||0) + (m.may_t||0) + (m.jun_t||0);
+      const pct = q2tM > 0 ? (m.q2a||0) / q2tM * 100 : null;
+      if (perf === 'under80' && (pct === null || pct >= 80)) return false;
+      if (perf === 'under70' && (pct === null || pct >= 70)) return false;
+      if (perf === 'over100' && (pct === null || pct < 100)) return false;
+    }
+    return true;
+  });
+  renderMerchantTable(currentFiltered);
+}
+
+function downloadCSV() {
+  const sortKey = document.getElementById('sortFilter').value;
+  const sorted = [...currentFiltered].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
+  const headers = ['Comercio','KAM','Ene Actual','Feb Actual','Mar Actual','Q1 Actual','Q1 Target','Q1 %','Abr Actual','May Actual','Jun Actual','Q2 Parcial','Q2 Target','Q2 %'];
+  const rows = sorted.map(m => {
+    const q1Pct = m.q1t > 0 ? (m.q1a / m.q1t * 100).toFixed(1) + '%' : '—';
+    const q2t = m.apr_t + m.may_t + m.jun_t;
+    const q2Pct = q2t > 0 ? (m.q2a / q2t * 100).toFixed(1) + '%' : '—';
+    return [
+      `"${m.name}"`, `"${m.kam}"`,
+      Math.round(m.jan_a), Math.round(m.feb_a), Math.round(m.mar_a),
+      Math.round(m.q1a), Math.round(m.q1t), q1Pct,
+      Math.round(m.apr_a), Math.round(m.may_a), Math.round(m.jun_a),
+      Math.round(m.q2a), Math.round(q2t), q2Pct
+    ].join(',');
+  });
+
+  // Add totals row
+  const T = {jan_a:0,feb_a:0,mar_a:0,q1a:0,q1t:0,apr_a:0,may_a:0,jun_a:0,q2a:0,apr_t:0,may_t:0,jun_t:0};
+  currentFiltered.forEach(m => { for(const k in T) T[k] += m[k]||0; });
+  const q1P = T.q1t > 0 ? (T.q1a/T.q1t*100).toFixed(1)+'%' : '—';
+  const q2T = T.apr_t + T.may_t + T.jun_t;
+  const q2P = q2T > 0 ? (T.q2a/q2T*100).toFixed(1)+'%' : '—';
+  rows.push(['TOTAL','',Math.round(T.jan_a),Math.round(T.feb_a),Math.round(T.mar_a),
+    Math.round(T.q1a),Math.round(T.q1t),q1P,
+    Math.round(T.apr_a),Math.round(T.may_a),Math.round(T.jun_a),Math.round(T.q2a),Math.round(q2T),q2P].join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const kam = document.getElementById('kamFilter').value || 'todos';
+  a.href = url;
+  a.download = `GR_Growth_${kam}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+renderMerchantTable(merchantData);
+
+// ── YoY Growth Table ──
+const yoy2025byKam = {
+  'ALL':                  {jan:673620, feb:616336, mar:656111, apr:618983, may:702304, jun:674657},
+  'CRISTINA SAENZ':       {jan:52525,  feb:51590,  mar:54954,  apr:47947,  may:47447,  jun:49498},
+  'EDER LEONARDO CANTOR': {jan:178198, feb:178493, mar:168918, apr:180077, may:212366, jun:201220},
+  'EDUAR MALAGON':        {jan:177140, feb:159174, mar:183056, apr:161373, may:191984, jun:191006},
+  'Not Assigned':         {jan:33881,  feb:34019,  mar:34904,  apr:28962,  may:27735,  jun:22472},
+  'PAULA RODRIGUEZ':      {jan:231876, feb:193060, mar:214278, apr:200624, may:222773, jun:210460},
+};
+
+function renderYoYTable() {
+  const kam = document.getElementById('yoyKamFilter').value;
+  const d25 = yoy2025byKam[kam];
+  const filtered = kam === 'ALL' ? merchantData : merchantData.filter(m => m.kam === kam);
+  const d26 = {
+    jan: filtered.reduce((s,m)=>s+(m.jan_a||0),0),
+    feb: filtered.reduce((s,m)=>s+(m.feb_a||0),0),
+    mar: filtered.reduce((s,m)=>s+(m.mar_a||0),0),
+    apr: filtered.reduce((s,m)=>s+(m.apr_a||0),0),
+    may: filtered.reduce((s,m)=>s+(m.may_a||0),0),
+    jun: filtered.reduce((s,m)=>s+(m.jun_a||0),0),
+    q1a: filtered.reduce((s,m)=>s+(m.q1a||0),0),
+    q2a: filtered.reduce((s,m)=>s+(m.q2a||0),0),
+  };
+  const q1_25 = d25.jan+d25.feb+d25.mar;
+  const q2_25 = d25.apr+d25.may+d25.jun;
+
+  function yoyRow(label, v25, v26, rowStyle) {
+    const diff = v26 - v25;
+    const pct = v25 ? (diff/v25*100) : null;
+    const sign = diff >= 0 ? '+' : '';
+    const diffColor = diff >= 0 ? '#10b981' : (pct > -10 ? '#f59e0b' : '#ef4444');
+    const pillBg = pct === null ? '#f3f4f6' : (pct >= 0 ? '#dcfce7' : (pct > -10 ? '#fef3c7' : '#fee2e2'));
+    const pillCol = pct === null ? '#374151' : (pct >= 0 ? '#166534' : (pct > -10 ? '#92400e' : '#991b1b'));
+    const pctStr = pct !== null ? `${sign}${pct.toFixed(1)}%` : '—';
+    return `<tr style="${rowStyle||''}">
+      <td>${label}</td>
+      <td style="text-align:right">$${Math.round(v25).toLocaleString('en-US')}</td>
+      <td style="text-align:right">$${Math.round(v26).toLocaleString('en-US')}</td>
+      <td style="text-align:right;color:${diffColor};font-weight:600">${sign}$${Math.abs(Math.round(diff)).toLocaleString('en-US')}</td>
+      <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:${pillBg};color:${pillCol};font-weight:700">${pctStr}</span></td>
+    </tr>`;
+  }
+
+  document.getElementById('yoyTableBody').innerHTML =
+    yoyRow('Enero', d25.jan, d26.jan) +
+    yoyRow('Febrero', d25.feb, d26.feb) +
+    yoyRow('Marzo', d25.mar, d26.mar) +
+    yoyRow('<strong>Q1 Total</strong>', q1_25, d26.q1a, 'background:#f0f9ff;font-weight:700;border-top:1px solid #bae6fd;border-bottom:1px solid #bae6fd') +
+    yoyRow('Abril', d25.apr, d26.apr) +
+    yoyRow('Mayo', d25.may, d26.may) +
+    yoyRow('Junio <span class="partial-badge">Parcial</span>', d25.jun, d26.jun) +
+    yoyRow('<strong>Q2 Total</strong> <span class="partial-badge">Parcial</span>', q2_25, d26.q2a, 'background:#fffbeb;font-weight:700;border-top:1px solid #fde68a;border-bottom:1px solid #fde68a') +
+    yoyRow('<strong>H1 Total</strong>', q1_25+q2_25, d26.q1a+d26.q2a, 'background:#f0fdf4;font-weight:700;border-top:2px solid #86efac');
+}
+renderYoYTable();
+
+// ── Total Section Charts ──
+window.addEventListener('load', function() {(function() {
+  const GROWTH_COLOR  = 'rgba(15,52,96,0.82)';
+  const SMB_COLOR     = 'rgba(59,130,246,0.75)';
+  const TARGET_COLOR  = 'rgba(209,213,219,0.9)';
+  const TOTAL_COLOR   = 'rgba(16,185,129,0.82)';
+
+  // Data
+  const gQ = [1927476, 1924784];
+  const sQ = [1636269, 1364182];
+  const gT = [1741888, 2042034, 2121787, 2152535];
+  const sT = [1529412, 1542489, 1731974, 1844874];
+
+  // Monthly combined
+  const months   = ['Ene','Feb','Mar','Abr','May','Jun'];
+  const gMonthly = [674265, 620663, 632547, 656255, 654433, 625211];
+  const sMonthly = [559022, 523744, 553503, 491185, 461405, 351625];
+  const totMonthly = months.map((_,i) => gMonthly[i] + sMonthly[i]);
+
+  // Stacked quarterly chart
+  new Chart(document.getElementById('totalQuarterly'), {
+    type: 'bar',
+    data: {
+      labels: ['Q1 2026','Q2 2026','Q3 2026','Q4 2026'],
+      datasets: [
+        { label: 'Total Actual',  data: [gQ[0]+sQ[0], gQ[1]+sQ[1], 0, 0], backgroundColor: GROWTH_COLOR, borderRadius: 5, order: 1 },
+        { label: 'Target Total',  data: gT.map((v,i)=>v+(sT[i]||0)),       backgroundColor: TARGET_COLOR, borderRadius: 5, order: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+      scales: {
+        x: { stacked: false, grid: { display: false } },
+        y: {
+          stacked: false, grid: { color: '#f3f4f6' },
+          ticks: { callback: v => '$' + (v/1000000).toFixed(1) + 'M' }
+        }
+      }
+    }
+  });
+
+  // Monthly trend — stacked area
+  new Chart(document.getElementById('totalMonthly'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'Growth', data: gMonthly, backgroundColor: GROWTH_COLOR, borderRadius: 4 },
+        { label: 'SMB',    data: sMonthly, backgroundColor: SMB_COLOR,   borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: {
+          stacked: true, grid: { color: '#f3f4f6' },
+          ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }
+        }
+      }
+    }
+  });
+})();});
+
+// ── Nav ──
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.segment-nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+<!-- ═══════════════════ TOTAL ═══════════════════ -->
+<section id="total" class="section">
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">Q1 Total GR</div>
+      <div class="kpi-value">$3.56M</div>
+      <div class="kpi-sub">Target: $3.27M <span class="pill green">108.9%</span></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Q2 Total GR <span class="partial-badge">Abr–Jun</span></div>
+      <div class="kpi-value">$3.29M</div>
+      <div class="kpi-sub">Target Q2: $3.58M · Jun parcial <span class="pill yellow">91.8%</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Target Full Year</div>
+      <div class="kpi-value">$14.71M</div>
+      <div class="kpi-sub">Q3: $3.85M · Q4: $4.00M</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">YTD GR (Ene–Jun)</div>
+      <div class="kpi-value">$6.85M</div>
+      <div class="kpi-sub">vs YTD Target $6.86M <span class="pill yellow">99.9%</span></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">GR vs Target por Trimestre — Total</div>
+      <div class="chart-sub">Growth + SMB · USD · Q3 y Q4 sin datos reales aún</div>
+      <div class="chart-wrap"><canvas id="totalQuarterly"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Tendencia Mensual — Ene–Jun 2026</div>
+      <div class="chart-sub">Barras apiladas Growth + SMB · USD</div>
+      <div class="chart-wrap"><canvas id="totalMonthly"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Summary table -->
+  <div class="table-card">
+    <div class="chart-title">Resumen por Segmento</div>
+    <div class="chart-sub" style="margin-bottom:14px">Comparativo Growth vs SMB · Q1 y Q2 2026</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Segmento</th>
+          <th style="text-align:right">Q1 Target</th>
+          <th style="text-align:right">Q1 Actual</th>
+          <th style="text-align:right">Q1 Dif.</th>
+          <th style="text-align:right">Q1 %</th>
+          <th style="text-align:right">Q2 Target</th>
+          <th style="text-align:right">Q2 Actual</th>
+          <th style="text-align:right">Q2 Dif.</th>
+          <th style="text-align:right">Q2 %</th>
+          <th style="text-align:right">YTD Actual</th>
+          <th style="text-align:right">YTD Target</th>
+          <th style="text-align:right">YTD %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>📈 Growth</strong></td>
+          <td style="text-align:right">$1,741,888</td>
+          <td style="text-align:right">$1,927,476</td>
+          <td style="text-align:right;color:#10b981;font-weight:700">+$185,588</td>
+          <td style="text-align:right"><span class="pill green">110.7%</span></td>
+          <td style="text-align:right">$2,042,034</td>
+          <td style="text-align:right">$1,924,784</td>
+          <td style="text-align:right;color:#f59e0b;font-weight:700">-$117,250</td>
+          <td style="text-align:right"><span class="pill yellow">94.3%</span></td>
+          <td style="text-align:right">$3,852,260</td>
+          <td style="text-align:right">$3,783,922</td>
+          <td style="text-align:right"><span class="pill green">101.8%</span></td>
+        </tr>
+        <tr>
+          <td><strong>🏪 SMB</strong></td>
+          <td style="text-align:right">$1,529,412</td>
+          <td style="text-align:right">$1,636,269</td>
+          <td style="text-align:right;color:#10b981;font-weight:700">+$106,857</td>
+          <td style="text-align:right"><span class="pill green">107.0%</span></td>
+          <td style="text-align:right">$1,542,489</td>
+          <td style="text-align:right">$1,364,182</td>
+          <td style="text-align:right;color:#f59e0b;font-weight:700">-$178,307</td>
+          <td style="text-align:right"><span class="pill yellow">88.4%</span></td>
+          <td style="text-align:right">$3,000,451</td>
+          <td style="text-align:right">$3,071,901</td>
+          <td style="text-align:right"><span class="pill yellow">97.7%</span></td>
+        </tr>
+        <tr style="background:#f0f9ff;font-weight:700;border-top:2px solid #bae6fd">
+          <td><strong>🌐 TOTAL</strong></td>
+          <td style="text-align:right">$3,271,300</td>
+          <td style="text-align:right">$3,563,745</td>
+          <td style="text-align:right;color:#10b981;font-weight:700">+$292,445</td>
+          <td style="text-align:right"><span class="pill green">108.9%</span></td>
+          <td style="text-align:right">$3,584,523</td>
+          <td style="text-align:right">$3,288,966</td>
+          <td style="text-align:right;color:#f59e0b;font-weight:700">-$295,557</td>
+          <td style="text-align:right"><span class="pill yellow">91.8%</span></td>
+          <td style="text-align:right">$6,852,711</td>
+          <td style="text-align:right">$6,855,823</td>
+          <td style="text-align:right"><span class="pill yellow">99.9%</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">* Q2 incluye Jun parcial. YTD = Q1 + Q2 parcial. TRM 3860 COP/USD.</p>
+  </div>
+
+  <div class="table-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="chart-title">📊 Crecimiento vs 2025 — Total</div>
+        <div class="chart-sub">GR real mensual · comparativo 2025 vs 2026 · USD</div>
+      </div>
+      <select id="totalSegFilter" onchange="renderTotalYoYTable()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
+        <option value="TOTAL">📊 Total (Growth + SMB)</option>
+        <option value="GROWTH">📈 Growth</option>
+        <option value="SMB">🏪 SMB</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th style="text-align:right">GR 2025</th>
+          <th style="text-align:right">GR 2026</th>
+          <th style="text-align:right">Variación $</th>
+          <th style="text-align:right">YoY %</th>
+        </tr>
+      </thead>
+      <tbody id="totalYoYBody"></tbody>
+    </table>
+    <p class="note">* 2025: Sheet 1 del archivo · 2026: actuals dashboard · Q2 SMB incluye Comercios Migrados · Jun 2026 parcial</p>
+  </div>
+
+</section>
+
+<script>
+const totalYoYData = {
+  GROWTH: {
+    '25': {jan:673620, feb:616336, mar:656111, apr:618983, may:702304, jun:674657},
+    '26': {jan:674265, feb:620663, mar:632547, apr:656255, may:654433, jun:625211, q1:1927476, q2:1924784}
+  },
+  SMB: {
+    '25': {jan:691959, feb:652512, mar:699868, apr:640870, may:723346, jun:633269},
+    '26': {jan:559022, feb:523744, mar:553503, apr:491185, may:461405, jun:351625, q1:1636269, q2:1364182}
+  }
+};
+
+function renderTotalYoYTable() {
+  const seg = document.getElementById('totalSegFilter').value;
+
+  let d25, d26;
+  if (seg === 'TOTAL') {
+    const g = totalYoYData.GROWTH, s = totalYoYData.SMB;
+    d25 = { jan: g['25'].jan+s['25'].jan, feb: g['25'].feb+s['25'].feb, mar: g['25'].mar+s['25'].mar,
+             apr: g['25'].apr+s['25'].apr, may: g['25'].may+s['25'].may, jun: g['25'].jun+s['25'].jun };
+    d26 = { jan: g['26'].jan+s['26'].jan, feb: g['26'].feb+s['26'].feb, mar: g['26'].mar+s['26'].mar,
+             apr: g['26'].apr+s['26'].apr, may: g['26'].may+s['26'].may, jun: g['26'].jun+s['26'].jun,
+             q1: g['26'].q1+s['26'].q1, q2: g['26'].q2+s['26'].q2 };
+  } else {
+    d25 = totalYoYData[seg]['25'];
+    d26 = totalYoYData[seg]['26'];
+  }
+
+  const q1_25 = d25.jan+d25.feb+d25.mar;
+  const q2_25 = d25.apr+d25.may+d25.jun;
+
+  function tRow(label, v25, v26, rowStyle) {
+    const diff = v26 - v25;
+    const pct = v25 ? diff/v25*100 : null;
+    const sign = diff >= 0 ? '+' : '';
+    const dc = diff >= 0 ? '#10b981' : (pct > -10 ? '#f59e0b' : '#ef4444');
+    const pb = pct === null ? '#f3f4f6' : (pct >= 0 ? '#dcfce7' : (pct > -10 ? '#fef3c7' : '#fee2e2'));
+    const pc = pct === null ? '#374151' : (pct >= 0 ? '#166534' : (pct > -10 ? '#92400e' : '#991b1b'));
+    const ps = pct !== null ? `${sign}${pct.toFixed(1)}%` : '—';
+    return `<tr style="${rowStyle||''}">
+      <td>${label}</td>
+      <td style="text-align:right">$${Math.round(v25).toLocaleString('en-US')}</td>
+      <td style="text-align:right">$${Math.round(v26).toLocaleString('en-US')}</td>
+      <td style="text-align:right;color:${dc};font-weight:600">${sign}$${Math.abs(Math.round(diff)).toLocaleString('en-US')}</td>
+      <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:${pb};color:${pc};font-weight:700">${ps}</span></td>
+    </tr>`;
+  }
+
+  document.getElementById('totalYoYBody').innerHTML =
+    tRow('Enero', d25.jan, d26.jan) +
+    tRow('Febrero', d25.feb, d26.feb) +
+    tRow('Marzo', d25.mar, d26.mar) +
+    tRow('<strong>Q1 Total</strong>', q1_25, d26.q1, 'background:#f0f9ff;font-weight:700;border-top:1px solid #bae6fd;border-bottom:1px solid #bae6fd') +
+    tRow('Abril', d25.apr, d26.apr) +
+    tRow('Mayo', d25.may, d26.may) +
+    tRow('Junio <span class="partial-badge">Parcial</span>', d25.jun, d26.jun) +
+    tRow('<strong>Q2 Total</strong> <span class="partial-badge">Parcial</span>', q2_25, d26.q2, 'background:#fffbeb;font-weight:700;border-top:1px solid #fde68a;border-bottom:1px solid #fde68a') +
+    tRow('<strong>H1 Total</strong>', q1_25+q2_25, d26.q1+d26.q2, 'background:#f0fdf4;font-weight:700;border-top:2px solid #86efac');
+}
+renderTotalYoYTable();
+</script>
+
+</body>
+</html>
