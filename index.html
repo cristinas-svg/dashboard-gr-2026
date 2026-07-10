@@ -190,6 +190,7 @@
           <option>EDUAR MALAGON</option>
           <option>Not Assigned</option>
           <option>PAULA RODRIGUEZ</option>
+          <option value="TATIANA ROBAYO">TATIANA ROBAYO (Q3)</option>
         </select>
         <select id="sortFilter" onchange="filterMerchants()" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:0.83rem;color:#374151;background:white;cursor:pointer">
           <option value="q1a">Ordenar por Q1</option>
@@ -677,7 +678,7 @@ function fmtPct(a, t) {
 function fmtCell(v) { return v ? '$' + Math.round(v).toLocaleString('en-US') : '—'; }
 function cellStyle(base) { return `style="text-align:right;padding:8px;background:${base}"`; }
 
-function renderMerchantTable(data) {
+function renderMerchantTable(data, tatianaMode) {
   const sortKey = document.getElementById('sortFilter').value;
   document.getElementById('merchantCount').textContent = data.length + ' comercio' + (data.length !== 1 ? 's' : '');
 
@@ -687,10 +688,10 @@ function renderMerchantTable(data) {
   data.forEach(m => { for(const k in T) T[k] += m[k]||0; });
 
   // Update target row
-  document.getElementById('tot_jan_t').textContent = fmtCell(T.jan_t);
-  document.getElementById('tot_feb_t').textContent = fmtCell(T.feb_t);
-  document.getElementById('tot_mar_t').textContent = fmtCell(T.mar_t);
-  document.getElementById('tot_q1t').textContent   = fmtCell(T.q1t);
+  document.getElementById('tot_jan_t').textContent = tatianaMode ? '—' : fmtCell(T.jan_t);
+  document.getElementById('tot_feb_t').textContent = tatianaMode ? '—' : fmtCell(T.feb_t);
+  document.getElementById('tot_mar_t').textContent = tatianaMode ? '—' : fmtCell(T.mar_t);
+  document.getElementById('tot_q1t').textContent   = tatianaMode ? '—' : fmtCell(T.q1t);
   // Use authoritative KAM-level Q2 targets (not merchant sum, which drifts)
   const _kamQ2Map = {
     '': 2042034,
@@ -701,23 +702,23 @@ function renderMerchantTable(data) {
     'Not Assigned': 1813,
   };
   const _kamSel = document.getElementById('kamFilter').value;
-  const _q2Target = _kamQ2Map.hasOwnProperty(_kamSel) ? _kamQ2Map[_kamSel] : (T.apr_t+T.may_t+T.jun_t);
+  const _q2Target = tatianaMode ? 0 : (_kamQ2Map.hasOwnProperty(_kamSel) ? _kamQ2Map[_kamSel] : (T.apr_t+T.may_t+T.jun_t));
   const _q2MonthT  = Math.round(_q2Target / 3);
 
-  document.getElementById('tot_apr_t').textContent = fmtCell(_q2MonthT);
-  document.getElementById('tot_may_t').textContent = fmtCell(_q2MonthT);
-  document.getElementById('tot_jun_t').textContent = fmtCell(_q2MonthT);
-  document.getElementById('tot_q2t').textContent   = fmtCell(_q2Target);
+  document.getElementById('tot_apr_t').textContent = tatianaMode ? '—' : fmtCell(_q2MonthT);
+  document.getElementById('tot_may_t').textContent = tatianaMode ? '—' : fmtCell(_q2MonthT);
+  document.getElementById('tot_jun_t').textContent = tatianaMode ? '—' : fmtCell(_q2MonthT);
+  document.getElementById('tot_q2t').textContent   = tatianaMode ? '—' : fmtCell(_q2Target);
 
   // Update actual row
-  document.getElementById('tot_jan_a').textContent = fmtCell(T.jan_a);
-  document.getElementById('tot_feb_a').textContent = fmtCell(T.feb_a);
-  document.getElementById('tot_mar_a').textContent = fmtCell(T.mar_a);
-  document.getElementById('tot_q1a').textContent   = fmtCell(T.q1a);
-  document.getElementById('tot_apr_a').textContent = fmtCell(T.apr_a);
-  document.getElementById('tot_may_a').textContent = fmtCell(T.may_a);
-  document.getElementById('tot_jun_a').textContent = fmtCell(T.jun_a);
-  document.getElementById('tot_q2a').textContent   = fmtCell(T.q2a);
+  document.getElementById('tot_jan_a').textContent = tatianaMode ? '—' : fmtCell(T.jan_a);
+  document.getElementById('tot_feb_a').textContent = tatianaMode ? '—' : fmtCell(T.feb_a);
+  document.getElementById('tot_mar_a').textContent = tatianaMode ? '—' : fmtCell(T.mar_a);
+  document.getElementById('tot_q1a').textContent   = tatianaMode ? '—' : fmtCell(T.q1a);
+  document.getElementById('tot_apr_a').textContent = tatianaMode ? '—' : fmtCell(T.apr_a);
+  document.getElementById('tot_may_a').textContent = tatianaMode ? '—' : fmtCell(T.may_a);
+  document.getElementById('tot_jun_a').textContent = tatianaMode ? '—' : fmtCell(T.jun_a);
+  document.getElementById('tot_q2a').textContent   = tatianaMode ? '—' : fmtCell(T.q2a);
   document.getElementById('tot_q3t').textContent   = fmtCell(T.q3t);
   document.getElementById('tot_q3t_actual').textContent = fmtCell(T.q3t);
   document.getElementById('tot_jul_a').textContent = fmtCell(T.jul_a);
@@ -743,27 +744,38 @@ function renderMerchantTable(data) {
   const tbody = document.getElementById('merchantTableBody');
   tbody.innerHTML = '';
   sorted.forEach(m => {
-    const q1Pct = m.q1t > 0 ? Math.round(m.q1a/m.q1t*100) : null;
+    // In tatianaMode, Q1/Q2 history belongs to the old KAM — show as 0
+    const jan_a = tatianaMode ? 0 : m.jan_a;
+    const feb_a = tatianaMode ? 0 : m.feb_a;
+    const mar_a = tatianaMode ? 0 : m.mar_a;
+    const q1a   = tatianaMode ? 0 : m.q1a;
+    const apr_a = tatianaMode ? 0 : m.apr_a;
+    const may_a = tatianaMode ? 0 : m.may_a;
+    const jun_a = tatianaMode ? 0 : m.jun_a;
+    const q2a   = tatianaMode ? 0 : m.q2a;
+    const kamLabel = tatianaMode ? 'TATIANA ROBAYO' : m.kam;
+
+    const q1Pct = (!tatianaMode && m.q1t > 0) ? Math.round(q1a/m.q1t*100) : null;
     const q1c = q1Pct === null ? '#9ca3af' : q1Pct >= 100 ? '#10b981' : q1Pct >= 70 ? '#f59e0b' : '#ef4444';
-    const q2tM = (m.apr_t || 0) + (m.may_t || 0) + (m.jun_t || 0);
-    const q2PctM = q2tM > 0 ? Math.round((m.q2a||0)/q2tM*100) : null;
+    const q2tM = tatianaMode ? 0 : ((m.apr_t || 0) + (m.may_t || 0) + (m.jun_t || 0));
+    const q2PctM = q2tM > 0 ? Math.round(q2a/q2tM*100) : null;
     const q2cM = q2PctM === null ? '#9ca3af' : q2PctM >= 100 ? '#10b981' : q2PctM >= 70 ? '#f59e0b' : '#ef4444';
     tbody.innerHTML += `<tr>
       <td style="font-size:0.78rem;max-width:200px;padding:8px 12px">${m.name}</td>
-      <td style="font-size:0.72rem;color:#6b7280;white-space:nowrap;padding:8px">${m.kam}</td>
-      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.jan_a)}</td>
-      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.feb_a)}</td>
-      <td ${cellStyle('#f0f9ff')}>${fmtCell(m.mar_a)}</td>
+      <td style="font-size:0.72rem;color:#6b7280;white-space:nowrap;padding:8px">${kamLabel}</td>
+      <td ${cellStyle('#f0f9ff')}>${tatianaMode ? '—' : fmtCell(jan_a)}</td>
+      <td ${cellStyle('#f0f9ff')}>${tatianaMode ? '—' : fmtCell(feb_a)}</td>
+      <td ${cellStyle('#f0f9ff')}>${tatianaMode ? '—' : fmtCell(mar_a)}</td>
       <td style="text-align:right;padding:8px;background:#e0f2fe;font-weight:700;border-right:2px solid #bae6fd">
-        ${fmtCell(m.q1a)}
-        ${m.q1t ? `<span style="display:block;font-size:0.68rem;color:${q1c};font-weight:700">${q1Pct}%</span>` : ''}
+        ${tatianaMode ? '—' : fmtCell(q1a)}
+        ${(!tatianaMode && m.q1t) ? `<span style="display:block;font-size:0.68rem;color:${q1c};font-weight:700">${q1Pct}%</span>` : ''}
       </td>
-      <td ${cellStyle('#fffbeb')}>${fmtCell(m.apr_a)}</td>
-      <td ${cellStyle('#fffbeb')}>${fmtCell(m.may_a)}</td>
-      <td ${cellStyle('#fffbeb')}>${fmtCell(m.jun_a)}</td>
+      <td ${cellStyle('#fffbeb')}>${tatianaMode ? '—' : fmtCell(apr_a)}</td>
+      <td ${cellStyle('#fffbeb')}>${tatianaMode ? '—' : fmtCell(may_a)}</td>
+      <td ${cellStyle('#fffbeb')}>${tatianaMode ? '—' : fmtCell(jun_a)}</td>
       <td style="text-align:right;padding:8px;background:#fef3c7;font-weight:700;border-left:2px solid #fde68a">
-        ${fmtCell(m.q2a)}
-        ${q2tM ? `<span style="display:block;font-size:0.68rem;color:${q2cM};font-weight:700">${q2PctM}%</span>` : ''}
+        ${tatianaMode ? '—' : fmtCell(q2a)}
+        ${(!tatianaMode && q2tM) ? `<span style="display:block;font-size:0.68rem;color:${q2cM};font-weight:700">${q2PctM}%</span>` : ''}
       </td>
       <td style="text-align:right;padding:8px;background:#f5f3ff;border-left:2px solid #c4b5fd;color:#6d28d9;font-weight:600">${fmtCell(m.q3t)}</td>
       <td style="text-align:right;padding:8px;background:#f5f3ff">${fmtCell(m.jul_a)}</td>
@@ -773,10 +785,36 @@ function renderMerchantTable(data) {
 
 let currentFiltered = merchantData;
 
+const tatianaMerchants = new Set([
+  'COLEGIO COLOMBIANO DE PSICOLOGOS',
+  'CORPORACION UNIVERSITARIA REPUBLICANA',
+  'DAFLORES.COM',
+  'FRISBY S.A.',
+  'FUNDACION PARA LA EDUCACION SUPERIOR SAN MATEO',
+  'FUNERAL INTERNATIONAL GROUP S.A.S.',
+  'HUBSPOT LATIN AMERICA SAS',
+  'IGLESIA EL LUGAR DE SU PRESENCIA',
+  'MODANOVA SAS',
+  'MOONS COLOMBIA SAS',
+  'PLATZI SAS',
+  'SEGUROPARAVIAJE.COM S.A.S',
+  'SU PRESENCIA PRODUCCIONES LTDA',
+  'UNIVERSIDAD DE INVESTIGACION Y DESARROLLO UDI',
+  'ZION INTERNATIONAL UNIVERSITY INC'
+]);
+
 function filterMerchants() {
   const kam = document.getElementById('kamFilter').value;
   const search = document.getElementById('merchantSearch').value.toLowerCase();
   const perf = document.getElementById('perfFilter').value;
+
+  if (kam === 'TATIANA ROBAYO') {
+    // Show only the 15 Tatiana merchants (Q3 only — Q1/Q2 zeroed in render)
+    currentFiltered = merchantData.filter(m => tatianaMerchants.has(m.name));
+    renderMerchantTable(currentFiltered, true);
+    return;
+  }
+
   currentFiltered = merchantData.filter(m => {
     if (kam && m.kam !== kam) return false;
     if (search && !m.name.toLowerCase().includes(search)) return false;
