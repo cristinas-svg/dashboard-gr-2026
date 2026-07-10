@@ -685,7 +685,13 @@ function renderMerchantTable(data, tatianaMode) {
   // Totals
   const T = {jan_t:0,feb_t:0,mar_t:0,q1t:0,apr_t:0,may_t:0,jun_t:0,
              jan_a:0,feb_a:0,mar_a:0,q1a:0,apr_a:0,may_a:0,jun_a:0,q2a:0,q3t:0,jul_a:0};
-  data.forEach(m => { for(const k in T) T[k] += m[k]||0; });
+  data.forEach(m => {
+    for(const k in T) {
+      // In normal mode, Tatiana's 15 merchants contribute 0 to Q3 cols
+      if (!tatianaMode && tatianaMerchants.has(m.name) && (k === 'q3t' || k === 'jul_a')) continue;
+      T[k] += m[k]||0;
+    }
+  });
 
   // Update target row
   document.getElementById('tot_jan_t').textContent = tatianaMode ? '—' : fmtCell(T.jan_t);
@@ -777,8 +783,8 @@ function renderMerchantTable(data, tatianaMode) {
         ${tatianaMode ? '—' : fmtCell(q2a)}
         ${(!tatianaMode && q2tM) ? `<span style="display:block;font-size:0.68rem;color:${q2cM};font-weight:700">${q2PctM}%</span>` : ''}
       </td>
-      <td style="text-align:right;padding:8px;background:#f5f3ff;border-left:2px solid #c4b5fd;color:#6d28d9;font-weight:600">${fmtCell(m.q3t)}</td>
-      <td style="text-align:right;padding:8px;background:#f5f3ff">${fmtCell(m.jul_a)}</td>
+      <td style="text-align:right;padding:8px;background:#f5f3ff;border-left:2px solid #c4b5fd;color:#6d28d9;font-weight:600">${(!tatianaMode && tatianaMerchants.has(m.name)) ? '—' : fmtCell(m.q3t)}</td>
+      <td style="text-align:right;padding:8px;background:#f5f3ff">${(!tatianaMode && tatianaMerchants.has(m.name)) ? '—' : fmtCell(m.jul_a)}</td>
     </tr>`;
   });
 }
