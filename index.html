@@ -1057,10 +1057,11 @@ function showSection(id, btn) {
   <div class="table-card">
     <div class="chart-title">Resumen por Segmento</div>
     <div class="chart-sub" style="margin-bottom:14px">Comparativo Growth vs SMB · Q1, Q2 y Q3 parcial 2026</div>
-    <table>
+    <div style="overflow-x:auto">
+    <table style="font-size:0.78rem;white-space:nowrap">
       <thead>
         <tr>
-          <th>Segmento</th>
+          <th style="min-width:90px">Segmento</th>
           <th style="text-align:right">Q1 Target</th>
           <th style="text-align:right">Q1 Actual</th>
           <th style="text-align:right">Q1 Dif.</th>
@@ -1131,6 +1132,7 @@ function showSection(id, btn) {
         </tr>
       </tbody>
     </table>
+    </div>
     <p class="note">* Q2 incluye Jun parcial. Q3 = Jul parcial. YTD = Q1 + Q2 parcial. TRM 3860 COP/USD.</p>
   </div>
 
