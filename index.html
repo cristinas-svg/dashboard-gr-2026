@@ -762,18 +762,23 @@ function renderMerchantTable(data, tatianaMode) {
   document.getElementById('tot_jan_a').textContent = tatianaMode ? '—' : fmtCell(T.jan_a);
   document.getElementById('tot_feb_a').textContent = tatianaMode ? '—' : fmtCell(T.feb_a);
   document.getElementById('tot_mar_a').textContent = tatianaMode ? '—' : fmtCell(T.mar_a);
-  document.getElementById('tot_q1a').textContent   = tatianaMode ? '—' : fmtCell(T.q1a);
+  // Use authoritative totals when no filter active
+  const _noFilter = !tatianaMode && _activeKam === '';
+  const _q1aDisp  = _noFilter ? _T.q1a : T.q1a;
+  const _q2aDisp  = _noFilter ? _T.q2a : T.q2a;
+
+  document.getElementById('tot_q1a').textContent   = tatianaMode ? '—' : fmtCell(_q1aDisp);
   document.getElementById('tot_apr_a').textContent = tatianaMode ? '—' : fmtCell(T.apr_a);
   document.getElementById('tot_may_a').textContent = tatianaMode ? '—' : fmtCell(T.may_a);
   document.getElementById('tot_jun_a').textContent = tatianaMode ? '—' : fmtCell(T.jun_a);
-  document.getElementById('tot_q2a').textContent   = tatianaMode ? '—' : fmtCell(T.q2a);
+  document.getElementById('tot_q2a').textContent   = tatianaMode ? '—' : fmtCell(_q2aDisp);
   document.getElementById('tot_q3t').textContent   = fmtCell(T.q3t);
   document.getElementById('tot_q3t_actual').textContent = fmtCell(T.q3t);
   document.getElementById('tot_jul_a').textContent = fmtCell(T.jul_a);
 
   // Summary chips
-  const q1Pct = T.q1t > 0 ? Math.round(T.q1a/T.q1t*100) : null;
-  const q2Pct = _q2Target > 0 ? Math.round(T.q2a/_q2Target*100) : null;
+  const q1Pct = T.q1t > 0 ? Math.round(_q1aDisp/T.q1t*100) : null;
+  const q2Pct = _q2Target > 0 ? Math.round(_q2aDisp/_q2Target*100) : null;
   function chip(label, pct, actual, target) {
     const c = pct === null ? '#9ca3af' : pct >= 100 ? '#10b981' : pct >= 70 ? '#f59e0b' : '#ef4444';
     const bg = pct === null ? '#f3f4f6' : pct >= 100 ? '#d1fae5' : pct >= 70 ? '#fef3c7' : '#fee2e2';
@@ -784,8 +789,8 @@ function renderMerchantTable(data, tatianaMode) {
     </div>`;
   }
   document.getElementById('merchantSummary').innerHTML =
-    chip('Q1 Cumplimiento', q1Pct, T.q1a, T.q1t) +
-    chip('Q2 (Abr–Jun)', q2Pct, T.q2a, _q2Target);
+    chip('Q1 Cumplimiento', q1Pct, _q1aDisp, T.q1t) +
+    chip('Q2 (Abr–Jun)', q2Pct, _q2aDisp, _q2Target);
 
   // Rows sorted
   const sorted = [...data].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
