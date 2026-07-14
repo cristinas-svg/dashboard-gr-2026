@@ -610,33 +610,26 @@ kamData.forEach(k => {
       <td style="background:#f5f3ff">${q3pct} <span class="progress-bar-wrap"><span class="progress-bar pg-yellow" style="width:${q3w}%"></span></span></td>
     </tr>`;
 });
-// Totals row
-const totQ1t = kamData.reduce((s,k)=>s+k.q1t,0);
-const totQ1a = kamData.reduce((s,k)=>s+k.q1a,0);
-const totQ2t = kamData.reduce((s,k)=>s+k.q2t,0);
-const totQ2a = kamData.reduce((s,k)=>s+k.q2a,0);
-const totQ3t = kamData.reduce((s,k)=>s+k.q3t,0);
-const totJul = kamData.reduce((s,k)=>s+k.jul_a,0);
-const totQ1pct = ((totQ1a/totQ1t)*100).toFixed(0)+'%';
-const totQ2pct = ((totQ2a/totQ2t)*100).toFixed(0)+'%';
-const totQ3pct = ((totJul/totQ3t)*100).toFixed(1)+'%';
-const totQ1w = Math.min(100,(totQ1a/totQ1t)*100);
-const totQ2w = Math.min(100,(totQ2a/totQ2t)*100);
-const totQ3w = Math.min(100,(totJul/totQ3t)*100);
-const totQ1color = totQ1a >= totQ1t ? 'pg-green' : 'pg-yellow';
-const totQ2color = totQ2a >= totQ2t ? 'pg-green' : 'pg-yellow';
+// Totals row — use authoritative quarterly totals (individual KAM actuals may not sum perfectly)
+const _T = { q1t:1741888, q1a:1929669, q2t:2042034, q2a:1952896, q3t:2121787, jul_a:243041 };
+const _tQ1pct = ((_T.q1a/_T.q1t)*100).toFixed(0)+'%';
+const _tQ2pct = ((_T.q2a/_T.q2t)*100).toFixed(0)+'%';
+const _tQ3pct = ((_T.jul_a/_T.q3t)*100).toFixed(1)+'%';
+const _tQ1w = Math.min(100,(_T.q1a/_T.q1t)*100);
+const _tQ2w = Math.min(100,(_T.q2a/_T.q2t)*100);
+const _tQ3w = Math.min(100,(_T.jul_a/_T.q3t)*100);
 tbody.innerHTML += `
   <tr style="background:#f0f9ff;font-weight:700;border-top:2px solid #bae6fd">
     <td><strong>TOTAL</strong></td>
-    <td>$${(totQ1t/1000).toFixed(0)}K</td>
-    <td>$${(totQ1a/1000).toFixed(0)}K</td>
-    <td>${totQ1pct} <span class="progress-bar-wrap"><span class="progress-bar ${totQ1color}" style="width:${totQ1w}%"></span></span></td>
-    <td>$${(totQ2t/1000).toFixed(0)}K</td>
-    <td>$${(totQ2a/1000).toFixed(0)}K</td>
-    <td>${totQ2pct} <span class="progress-bar-wrap"><span class="progress-bar ${totQ2color}" style="width:${totQ2w}%"></span></span></td>
-    <td style="background:#ede9fe;color:#6d28d9">$${(totQ3t/1000).toFixed(0)}K</td>
-    <td style="background:#ede9fe;font-weight:700;color:#6d28d9">$${(totJul/1000).toFixed(0)}K</td>
-    <td style="background:#ede9fe">${totQ3pct} <span class="progress-bar-wrap"><span class="progress-bar pg-yellow" style="width:${totQ3w}%"></span></span></td>
+    <td>$${(_T.q1t/1000).toFixed(0)}K</td>
+    <td>$${(_T.q1a/1000).toFixed(0)}K</td>
+    <td>${_tQ1pct} <span class="progress-bar-wrap"><span class="progress-bar pg-green" style="width:${_tQ1w}%"></span></span></td>
+    <td>$${(_T.q2t/1000).toFixed(0)}K</td>
+    <td>$${(_T.q2a/1000).toFixed(0)}K</td>
+    <td>${_tQ2pct} <span class="progress-bar-wrap"><span class="progress-bar pg-yellow" style="width:${_tQ2w}%"></span></span></td>
+    <td style="background:#ede9fe;color:#6d28d9">$${(_T.q3t/1000).toFixed(0)}K</td>
+    <td style="background:#ede9fe;font-weight:700;color:#6d28d9">$${(_T.jul_a/1000).toFixed(0)}K</td>
+    <td style="background:#ede9fe">${_tQ3pct} <span class="progress-bar-wrap"><span class="progress-bar pg-yellow" style="width:${_tQ3w}%"></span></span></td>
   </tr>`;
 
 // KAM bar chart
