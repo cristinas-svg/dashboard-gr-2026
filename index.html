@@ -780,7 +780,7 @@ function renderMerchantTable(data, tatianaMode) {
   // Summary chips
   const _julAChip = _noFilter ? _T.jul_a : _julADisp;
   // In tatianaMode: Q1/Q2 are zeroed (historical), Q3 is the relevant period
-  const q1Pct    = (!tatianaMode && T.q1t > 0)    ? Math.round(_q1aDisp/_T.q1t*100) : null;
+  const q1Pct    = (!tatianaMode && T.q1t > 0)    ? Math.round(_q1aDisp/T.q1t*100) : null;
   const q2Pct    = (!tatianaMode && _q2Target > 0) ? Math.round(_q2aDisp/_q2Target*100) : null;
   const q3Pct    = T.q3t > 0 ? Math.round(_julAChip/T.q3t*100) : null;
   function chip(label, pct, actual) {
