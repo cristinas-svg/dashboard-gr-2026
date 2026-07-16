@@ -778,11 +778,12 @@ function renderMerchantTable(data, tatianaMode) {
   document.getElementById('tot_jul_a').textContent = fmtCell(_julADisp);
 
   // Summary chips
-  const q1Pct = T.q1t > 0 ? Math.round(_q1aDisp/T.q1t*100) : null;
-  const q2Pct = _q2Target > 0 ? Math.round(_q2aDisp/_q2Target*100) : null;
   const _julAChip = _noFilter ? _T.jul_a : _julADisp;
-  const q3Pct = T.q3t > 0 ? Math.round(_julAChip/T.q3t*100) : null;
-  function chip(label, pct, actual, target) {
+  // In tatianaMode: Q1/Q2 are zeroed (historical), Q3 is the relevant period
+  const q1Pct    = (!tatianaMode && T.q1t > 0)    ? Math.round(_q1aDisp/_T.q1t*100) : null;
+  const q2Pct    = (!tatianaMode && _q2Target > 0) ? Math.round(_q2aDisp/_q2Target*100) : null;
+  const q3Pct    = T.q3t > 0 ? Math.round(_julAChip/T.q3t*100) : null;
+  function chip(label, pct, actual) {
     const c = pct === null ? '#9ca3af' : pct >= 100 ? '#10b981' : pct >= 70 ? '#f59e0b' : '#ef4444';
     const bg = pct === null ? '#f3f4f6' : pct >= 100 ? '#d1fae5' : pct >= 70 ? '#fef3c7' : '#fee2e2';
     return `<div style="background:${bg};border:1px solid ${c}55;border-radius:10px;padding:10px 16px;min-width:130px">
@@ -792,9 +793,9 @@ function renderMerchantTable(data, tatianaMode) {
     </div>`;
   }
   document.getElementById('merchantSummary').innerHTML =
-    chip('Q1 Cumplimiento', q1Pct, _q1aDisp, T.q1t) +
-    chip('Q2 (Abr–Jun)', q2Pct, _q2aDisp, _q2Target) +
-    (tatianaMode ? '' : chip('Q3 Jul Parcial', q3Pct, _julAChip, T.q3t));
+    chip('Q1 Cumplimiento', q1Pct,  tatianaMode ? 0 : _q1aDisp) +
+    chip('Q2 (Abr–Jun)',    q2Pct,  tatianaMode ? 0 : _q2aDisp) +
+    chip('Q3 Jul Parcial',  q3Pct,  _julAChip);
 
   // Rows sorted
   const sorted = [...data].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
