@@ -579,7 +579,7 @@ new Chart(document.getElementById('growthMonthly'), {
 const kamData = [
   { name: 'EDUAR MALAGON',        q1t: 571003, q1a: 669465, q2t: 725368, q2a: 762185, q3t: 558116, jul_a: 82029  },
   { name: 'EDER L. CANTOR',       q1t: 463509, q1a: 539317, q2t: 575896, q2a: 549995, q3t: 495514, jul_a: 76611  },
-  { name: 'PAULA RODRIGUEZ',      q1t: 560952, q1a: 592086, q2t: 560902, q2a: 491730, q3t: 458086, jul_a: 49123  },
+  { name: 'PAULA RODRIGUEZ',      q1t: 505130, q1a: 592086, q2t: 614211, q2a: 491730, q3t: 589698, jul_a: 49123  },
   { name: 'CRISTINA SAENZ',       q1t: 15159,  q1a: 12670,  q2t: 178055, q2a: 131780,  q3t: 313093, jul_a: 16296  },
   { name: 'TATIANA ROBAYO',       q1t: 0,      q1a: 0,      q2t: 0,      q2a: 0,      q3t: 272500, jul_a: 47971  },
   { name: 'NOT ASSIGNED',         q1t: 131265, q1a: 102307, q2t: 1813,   q2a: 17206, q3t: 24478,  jul_a: 3621   },
@@ -745,7 +745,7 @@ function renderMerchantTable(data, tatianaMode) {
     '': 2042034,
     'EDUAR MALAGON': 725368,
     'EDER LEONARDO CANTOR': 575896,
-    'PAULA RODRIGUEZ': 560902,
+    'PAULA RODRIGUEZ': 614211,
     'CRISTINA SAENZ': 178055,
     'Not Assigned': 1813,
   };
@@ -757,6 +757,15 @@ function renderMerchantTable(data, tatianaMode) {
     'CRISTINA SAENZ': 16296,
     'TATIANA ROBAYO': 47971,
     'Not Assigned': 3621,
+  };
+  const _kamQ3Map = {
+    '': 2121787,
+    'EDUAR MALAGON': 558116,
+    'EDER LEONARDO CANTOR': 495514,
+    'PAULA RODRIGUEZ': 589698,
+    'CRISTINA SAENZ': 313093,
+    'TATIANA ROBAYO': 272500,
+    'Not Assigned': 24478,
   };
   const _kamSel = document.getElementById('kamFilter').value;
   const _q2Target = tatianaMode ? 0 : (_kamQ2Map.hasOwnProperty(_kamSel) ? _kamQ2Map[_kamSel] : (T.apr_t+T.may_t+T.jun_t));
@@ -787,11 +796,12 @@ function renderMerchantTable(data, tatianaMode) {
   document.getElementById('tot_jul_a').textContent = fmtCell(_julADisp);
 
   // Summary chips
-  const _julAChip = _kamJulMap.hasOwnProperty(_kamSel) ? _kamJulMap[_kamSel] : _julADisp;
+  const _julAChip  = _kamJulMap.hasOwnProperty(_kamSel) ? _kamJulMap[_kamSel] : _julADisp;
+  const _q3Target  = _kamQ3Map.hasOwnProperty(_kamSel)  ? _kamQ3Map[_kamSel]  : T.q3t;
   // In tatianaMode: Q1/Q2 are zeroed (historical), Q3 is the relevant period
   const q1Pct    = (!tatianaMode && T.q1t > 0)    ? Math.round(_q1aDisp/T.q1t*100) : null;
   const q2Pct    = (!tatianaMode && _q2Target > 0) ? Math.round(_q2aDisp/_q2Target*100) : null;
-  const q3Pct    = T.q3t > 0 ? Math.round(_julAChip/T.q3t*100) : null;
+  const q3Pct    = _q3Target > 0 ? Math.round(_julAChip/_q3Target*100) : null;
   function chip(label, pct, actual) {
     const c = pct === null ? '#9ca3af' : pct >= 100 ? '#10b981' : pct >= 70 ? '#f59e0b' : '#ef4444';
     const bg = pct === null ? '#f3f4f6' : pct >= 100 ? '#d1fae5' : pct >= 70 ? '#fef3c7' : '#fee2e2';
@@ -804,7 +814,7 @@ function renderMerchantTable(data, tatianaMode) {
   document.getElementById('merchantSummary').innerHTML =
     chip('Q1 Cumplimiento', q1Pct,  tatianaMode ? 0 : _q1aDisp) +
     chip('Q2 (Abr–Jun)',    q2Pct,  tatianaMode ? 0 : _q2aDisp) +
-    chip('Q3 Jul Parcial',  q3Pct,  _julAChip);
+    chip('Q3 Jul Parcial',  q3Pct,  _julAChip, _q3Target);
 
   // Rows sorted
   const sorted = [...data].sort((a,b) => (b[sortKey]||0) - (a[sortKey]||0));
