@@ -749,6 +749,15 @@ function renderMerchantTable(data, tatianaMode) {
     'CRISTINA SAENZ': 178055,
     'Not Assigned': 1813,
   };
+  const _kamJulMap = {
+    '': 275651,
+    'EDUAR MALAGON': 82029,
+    'EDER LEONARDO CANTOR': 76611,
+    'PAULA RODRIGUEZ': 49123,
+    'CRISTINA SAENZ': 16296,
+    'TATIANA ROBAYO': 47971,
+    'Not Assigned': 3621,
+  };
   const _kamSel = document.getElementById('kamFilter').value;
   const _q2Target = tatianaMode ? 0 : (_kamQ2Map.hasOwnProperty(_kamSel) ? _kamQ2Map[_kamSel] : (T.apr_t+T.may_t+T.jun_t));
   const _q2MonthT  = Math.round(_q2Target / 3);
@@ -778,7 +787,7 @@ function renderMerchantTable(data, tatianaMode) {
   document.getElementById('tot_jul_a').textContent = fmtCell(_julADisp);
 
   // Summary chips
-  const _julAChip = _noFilter ? _T.jul_a : _julADisp;
+  const _julAChip = _kamJulMap.hasOwnProperty(_kamSel) ? _kamJulMap[_kamSel] : _julADisp;
   // In tatianaMode: Q1/Q2 are zeroed (historical), Q3 is the relevant period
   const q1Pct    = (!tatianaMode && T.q1t > 0)    ? Math.round(_q1aDisp/T.q1t*100) : null;
   const q2Pct    = (!tatianaMode && _q2Target > 0) ? Math.round(_q2aDisp/_q2Target*100) : null;
