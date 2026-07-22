@@ -387,7 +387,7 @@
         <tr>
           <td><strong>Q3 2026</strong> <span class="partial-badge">Parcial</span></td>
           <td>$1,731,974</td>
-          <td>$72,406</td>
+          <td>$125,103</td>
           <td style="color:#9ca3af">—</td>
           <td>
             4.2%
@@ -506,9 +506,9 @@
         <tr>
           <td>Julio <span class="partial-badge">Parcial</span></td>
           <td style="text-align:right">$750,736</td>
-          <td style="text-align:right">$72,406</td>
-          <td style="text-align:right;color:#ef4444;font-weight:600">-$678,330</td>
-          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-90.4%</span></td>
+          <td style="text-align:right">$125,103</td>
+          <td style="text-align:right;color:#ef4444;font-weight:600">-$625,633</td>
+          <td style="text-align:right"><span style="padding:2px 8px;border-radius:9px;font-size:0.78em;background:#fee2e2;color:#991b1b;font-weight:700">-83.3%</span></td>
         </tr>
       </tbody>
     </table>
@@ -661,7 +661,7 @@ new Chart(document.getElementById('smbQuarterly'), {
     labels: ['Q1', 'Q2 (Abr–Jun)', 'Q3', 'Q4'],
     datasets: [
       { label: 'Target', data: [1529412, 1542489, 1731974, 1844874], backgroundColor: TARGET_COLOR, borderRadius: 5 },
-      { label: 'Actual GR', data: [1635116, 1410174, 72406, 0], backgroundColor: [ACTUAL_COLOR, ACTUAL_COLOR, PARTIAL_COLOR, PARTIAL_COLOR], borderRadius: 5 }
+      { label: 'Actual GR', data: [1635116, 1410174, 125103, 0], backgroundColor: [ACTUAL_COLOR, ACTUAL_COLOR, PARTIAL_COLOR, PARTIAL_COLOR], borderRadius: 5 }
     ]
   },
   options: {
@@ -681,7 +681,7 @@ new Chart(document.getElementById('smbMonthly'), {
     labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
     datasets: [{
       label: 'Actual GR',
-      data: [559033, 523214, 552869, 538929, 459881, 351397, 72406],
+      data: [559033, 523214, 552869, 538929, 459881, 351397, 125103],
       borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)',
       fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#10b981'
     }]
@@ -1024,7 +1024,7 @@ window.addEventListener('load', function() {(function() {
   // Monthly combined
   const months   = ['Ene','Feb','Mar','Abr','May','Jun','Jul'];
   const gMonthly = [675158, 621379, 633132, 655111, 653043, 644742, 317414];
-  const sMonthly = [559033, 523214, 552869, 538929, 459881, 351397, 72406];
+  const sMonthly = [559033, 523214, 552869, 538929, 459881, 351397, 125103];
   const totMonthly = months.map((_,i) => gMonthly[i] + sMonthly[i]);
 
   // Stacked quarterly chart
@@ -1033,7 +1033,7 @@ window.addEventListener('load', function() {(function() {
     data: {
       labels: ['Q1 2026','Q2 2026','Q3 2026','Q4 2026'],
       datasets: [
-        { label: 'Total Actual',  data: [gQ[0]+sQ[0], gQ[1]+sQ[1], 317414+72406, 0], backgroundColor: GROWTH_COLOR, borderRadius: 5, order: 1 },
+        { label: 'Total Actual',  data: [gQ[0]+sQ[0], gQ[1]+sQ[1], 317414+125103, 0], backgroundColor: GROWTH_COLOR, borderRadius: 5, order: 1 },
         { label: 'Target Total',  data: gT.map((v,i)=>v+(sT[i]||0)),       backgroundColor: TARGET_COLOR, borderRadius: 5, order: 2 },
       ]
     },
@@ -1176,8 +1176,8 @@ function showSection(id, btn) {
           <td style="text-align:right;color:#f59e0b;font-weight:700">-$132,315</td>
           <td style="text-align:right"><span class="pill yellow">91.4%</span></td>
           <td style="text-align:right;background:#f5f3ff">$1,731,974</td>
-          <td style="text-align:right;background:#f5f3ff;font-weight:700;color:#6d28d9">$72,406</td>
-          <td style="text-align:right;background:#f5f3ff"><span class="pill" style="background:#ede9fe;color:#6d28d9">4.2%</span></td>
+          <td style="text-align:right;background:#f5f3ff;font-weight:700;color:#6d28d9">$125,103</td>
+          <td style="text-align:right;background:#f5f3ff"><span class="pill" style="background:#ede9fe;color:#6d28d9">7.2%</span></td>
           <td style="text-align:right">$3,045,290</td>
           <td style="text-align:right">$3,071,901</td>
           <td style="text-align:right"><span class="pill yellow">99.1%</span></td>
@@ -1193,8 +1193,8 @@ function showSection(id, btn) {
           <td style="text-align:right;color:#f59e0b;font-weight:700">-$221,453</td>
           <td style="text-align:right"><span class="pill yellow">93.8%</span></td>
           <td style="text-align:right;background:#f5f3ff">$3,853,761</td>
-          <td style="text-align:right;background:#f5f3ff;font-weight:700;color:#6d28d9">$389,820</td>
-          <td style="text-align:right;background:#f5f3ff"><span class="pill" style="background:#ede9fe;color:#6d28d9">10.1%</span></td>
+          <td style="text-align:right;background:#f5f3ff;font-weight:700;color:#6d28d9">$442,517</td>
+          <td style="text-align:right;background:#f5f3ff"><span class="pill" style="background:#ede9fe;color:#6d28d9">11.5%</span></td>
           <td style="text-align:right">$6,927,855</td>
           <td style="text-align:right">$6,855,823</td>
           <td style="text-align:right"><span class="pill green">101.1%</span></td>
@@ -1242,7 +1242,7 @@ const totalYoYData = {
   },
   SMB: {
     '25': {jan:698327, feb:656411, mar:704906, apr:646280, may:729463, jun:638412, jul:750736},
-    '26': {jan:559033, feb:523214, mar:552869, apr:538929, may:459881, jun:351397, jul:72406}
+    '26': {jan:559033, feb:523214, mar:552869, apr:538929, may:459881, jun:351397, jul:125103}
   }
 };
 
